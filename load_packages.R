@@ -1,0 +1,13 @@
+library(dplyr)
+library(tidyr)
+library(readxl)
+library(stringr)
+library(purrr)
+library(openxlsx)
+library(readr)
+library(lubridate)
+library(survey)
+library("rstan")
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+
