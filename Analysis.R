@@ -1,6 +1,8 @@
 setwd("~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian")
 
 load("~/Dropbox/Advanced Method Project/Data/MEPS_summary_weighted.Rdata")
+
+save(MEPS_summary_weighted, file = "MEPS_summary_weighted.Rdata")
 ##1. Generic price 
 #log(generic price) ~ N 
 
@@ -47,8 +49,13 @@ g = sample(cut(
 
 res = split(list, g)
 
+generic_price_with_t <- generic_price
+generic_price <- generic_price_with_t %>%
+  select(-year)
+generic_price <- generic_price_with_t %>%
+  mutate(year = year - 2012)
 generic_price <- generic_price %>%
-  select(-t_LOE)
+  select(-t_LOE, -year)
 
 generic_price_train <- generic_price %>%
   inner_join(res$train, by = c("ll" = "."))
@@ -145,3 +152,17 @@ ggplot(generic_price_test, aes(x = competitor, y = Y)) +
   geom_point(aes(y = Y_hat), shape = 1) +
   theme_bw()
 
+beta0_0 <- beta0
+beta1_0 <- beta1
+fit_0 <- fit0
+MSE_0 <- MSE
+
+beta0_1 <- beta0
+beta1_1 <- beta1
+fit_1 <- fit0
+MSE_1 <- MSE
+
+beta0_2 <- beta0
+beta1_2 <- beta1
+fit_2 <- fit0
+MSE_2 <- MSE

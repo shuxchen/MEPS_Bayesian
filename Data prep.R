@@ -746,6 +746,19 @@ market_size_prior_LOE <- index_year %>%
 MEPS_summary_weighted <- MEPS_summary_weighted %>% 
   left_join(market_size_prior_LOE, by = "index")
 
+####################################################################################
+##Add therapeutic areas, route
+####################################################################################
+load("~/Dropbox/Advanced Method Project/Data/all.RData")
+
+#keep index, oral, inject, ATC*
+drug_info <- df %>%
+  select(index, oral, inject, ATCA:ATCV) %>%
+  distinct()
+
+MEPS_summary_weighted <- MEPS_summary_weighted %>% 
+  left_join(drug_info, by = "index")
+
 save(MEPS_summary, file = "MEPS_summary.Rdata")
 write.xlsx(MEPS_summary, "MEPS_summary.xlsx")
 
