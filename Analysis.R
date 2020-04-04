@@ -31,7 +31,7 @@ generic_price %>%
 #1.2 Split data
 spec = c(train = .45, test = .15, validate = .4)
 
-spec = c(train = .9, test = .05, validate = .05)
+#spec = c(train = .6, validate = .4)
 
 
 n_index <- generic_price %>%
@@ -109,6 +109,35 @@ fit0 <- stan(
 )
 
 plot(fit0, plotfun = "trace", pars = c("mu[2]"), inc_warmup = TRUE)
+
+N_test <- nrow(generic_price_test)
+L_test <- length(unique(generic_price_test$ll))
+
+stan.dat_generic_price_test <- list(N = N, 
+                                    K = K,
+                                    L = L, 
+                                    y = generic_price_train$Y, 
+                                    ll = generic_price_train$ll, 
+                                    x = generic_price_train[, 2:(K+1)],
+                                    N_test = N_test, 
+                                    L_test = L_test, 
+                                    y_test = generic_price_test$Y, 
+                                    ll_test = generic_price_test$ll, 
+                                    x_test = generic_price_test[, 2:(K+1)])
+
+fit1 <- stan(
+  file = "model_predict.stan",  # Stan program
+  data = stan.dat_generic_price_test,    # named list of data
+  chains = 4,             # number of Markov chains
+  warmup = 5000,          # number of warmup iterations per chain
+  iter = 15000,           # total number of iterations per chain
+  cores = 4,              # number of cores (could use one per chain)
+  refresh = 0,            # no progress shown
+  control = list(adapt_delta = 0.9999, max_treedepth = 15)
+)
+
+plot(fit1, plotfun = "trace", pars = c("mu[2]"), inc_warmup = TRUE)
+
 
 
 test <- lm(Y ~ competitor, data = generic_price_train)

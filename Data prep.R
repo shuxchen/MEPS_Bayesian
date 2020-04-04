@@ -747,6 +747,48 @@ MEPS_summary_weighted <- MEPS_summary_weighted %>%
   left_join(market_size_prior_LOE, by = "index")
 
 ####################################################################################
+##branded drug price prior to LOE
+####################################################################################
+get_branded_price_prior_LOE <- function(df){
+  df <- df %>%
+    select(index, year, P_b)
+  return(df)
+}
+P_b_2006 <- get_branded_price_prior_LOE(MEPS2006_summary_weighted)
+P_b_2007 <- get_branded_price_prior_LOE(MEPS2007_summary_weighted)
+P_b_2008 <- get_branded_price_prior_LOE(MEPS2008_summary_weighted)
+P_b_2009 <- get_branded_price_prior_LOE(MEPS2009_summary_weighted)
+P_b_2010 <- get_branded_price_prior_LOE(MEPS2010_summary_weighted)
+P_b_2011 <- get_branded_price_prior_LOE(MEPS2011_summary_weighted)
+P_b_2012 <- get_branded_price_prior_LOE(MEPS2012_summary_weighted)
+P_b_2013 <- get_branded_price_prior_LOE(MEPS2013_summary_weighted)
+P_b_2014 <- get_branded_price_prior_LOE(MEPS2014_summary_weighted)
+P_b_2015 <- get_branded_price_prior_LOE(MEPS2015_summary_weighted)
+P_b_2016 <- get_branded_price_prior_LOE(MEPS2016_summary_weighted)
+P_b_2017 <- get_branded_price_prior_LOE(MEPS2017_summary_weighted)
+
+P_b_prior_LOE <- P_b_2006 %>%
+  rbind(P_b_2007) %>%
+  rbind(P_b_2008) %>%
+  rbind(P_b_2009) %>%
+  rbind(P_b_2010) %>%
+  rbind(P_b_2011) %>%
+  rbind(P_b_2012) %>%
+  rbind(P_b_2013) %>%
+  rbind(P_b_2014) %>%
+  rbind(P_b_2015) %>%
+  rbind(P_b_2016) %>%
+  rbind(P_b_2017) 
+
+P_b_prior_LOE <- index_year %>%
+  left_join(P_b_prior_LOE, by = c("index", "year_prior_LOE" = "year")) %>%
+  select(index, P_b) %>%
+  rename(P_b_prior_LOE = P_b)
+
+MEPS_summary_weighted <- MEPS_summary_weighted %>% 
+  left_join(P_b_prior_LOE, by = "index")
+
+####################################################################################
 ##Add therapeutic areas, route
 ####################################################################################
 load("~/Dropbox/Advanced Method Project/Data/all.RData")
@@ -764,3 +806,6 @@ write.xlsx(MEPS_summary, "MEPS_summary.xlsx")
 
 save(MEPS_summary_weighted, file = "MEPS_summary_weighted.Rdata")
 write.xlsx(MEPS_summary_weighted, "MEPS_summary_weighted.xlsx")
+
+save(MEPS_summary_weighted, file = "~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian/MEPS_summary_weighted.Rdata")
+write.xlsx(MEPS_summary_weighted, "~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian/MEPS_summary_weighted.xlsx")
