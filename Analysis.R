@@ -2,6 +2,7 @@ setwd("~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian")
 
 load("~/Dropbox/Advanced Method Project/Data/MEPS_summary_weighted.Rdata")
 
+load("MEPS_summary_weighted.Rdata")
 save(MEPS_summary_weighted, file = "MEPS_summary_weighted.Rdata")
 ##1. Generic price 
 #log(generic price) ~ N 
@@ -19,7 +20,7 @@ generic_price_id$ll <- seq.int(nrow(generic_price_id))
 generic_price <- generic_price %>%
   left_join(generic_price_id) %>%
   mutate(intercept = 1) %>%
-  select(Y, ll, intercept, competitor, t_LOE)
+  select(Y, ll, intercept, competitor, t_LOE, year, oral, inject, ATCA:ATCV)
 
 generic_price %>% 
   filter(is.na(t_LOE)) %>%
@@ -31,7 +32,7 @@ generic_price %>%
 #1.2 Split data
 spec = c(train = .45, test = .15, validate = .4)
 
-spec = c(train = .9, test = .05, validate = .05)
+spec = c(train = .6, test = .4)
 
 
 n_index <- generic_price %>%
@@ -49,13 +50,19 @@ g = sample(cut(
 
 res = split(list, g)
 
-generic_price_with_t <- generic_price
+generic_price_all <- generic_price
+
+generic_price <- generic_price_all %>%
+  select(1:5)
+
 generic_price <- generic_price_with_t %>%
   select(-year)
-generic_price <- generic_price_with_t %>%
+generic_price <- generic_price %>%
   mutate(year = year - 2012)
 generic_price <- generic_price %>%
   select(-t_LOE, -year)
+
+generic_price <- na.omit(generic_price)
 
 generic_price_train <- generic_price %>%
   inner_join(res$train, by = c("ll" = "."))
@@ -77,6 +84,7 @@ assign_id <- function(df){
     rename(ll = index) %>%
     arrange(Y, ll, intercept, competitor)
 }
+
 
 generic_price_train <- assign_id(generic_price_train) 
 generic_price_test <- assign_id(generic_price_test)
@@ -109,6 +117,38 @@ fit0 <- stan(
 )
 
 plot(fit0, plotfun = "trace", pars = c("mu[2]"), inc_warmup = TRUE)
+
+N_test <- nrow(generic_price_test)
+L_test <- length(unique(generic_price_test$ll))
+
+stan.dat_generic_price_test <- list(N = N, 
+                                    K = K,
+                                    L = L, 
+                                    y = generic_price_train$Y, 
+                                    ll = generic_price_train$ll, 
+                                    x = generic_price_train[, 2:(K+1)],
+                                    N_test = N_test, 
+                                    L_test = L_test, 
+                                    #y_test = generic_price_test$Y, 
+                                    #ll_test = generic_price_test$ll, 
+                                    x_test = generic_price_test[, 2:(K+1)])
+
+fit1 <- stan(
+  file = "model_predict.stan",  # Stan program
+  data = stan.dat_generic_price_test,    # named list of data
+  chains = 4,             # number of Markov chains
+  warmup = 5000,          # number of warmup iterations per chain
+  iter = 15000,           # total number of iterations per chain
+  cores = 4,              # number of cores (could use one per chain)
+  refresh = 0,            # no progress shown
+  control = list(adapt_delta = 0.9999, max_treedepth = 15)
+)
+
+plot(fit1, plotfun = "trace", pars = c("mu[2]"), inc_warmup = TRUE)
+
+ext_fit1 <- extract(fit1)
+apply(ext_fit1$y_test, 2, median)
+mean(apply(ext_fit1$y_test, 2, median) == y_test)
 
 
 test <- lm(Y ~ competitor, data = generic_price_train)
@@ -166,3 +206,23 @@ beta0_2 <- beta0
 beta1_2 <- beta1
 fit_2 <- fit0
 MSE_2 <- MSE
+
+beta0_3 <- beta0
+beta1_3 <- beta1
+fit_3 <- fit0
+MSE_3 <- MSE
+
+
+
+param.sample <- as.data.frame(fit0)  
+
+generic_price_train$Nbar <- mean(generic_price_train$N)
+
+# posterior predicted values for rat weight using the new data frame (data2):
+result.sample<- t(apply(param.sample, 1, function(x) x["mu_alpha"] + x["mu_beta"]*(data2$xbar - data2$x) ))
+
+# summary
+result.summary <- apply(result.sample, 2, mean) 
+result.summary.std <- apply(result.sample, 2, sd) 
+
+
