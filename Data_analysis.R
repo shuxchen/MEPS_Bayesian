@@ -1,3 +1,5 @@
+load("MEPS_summary_weighted.RData")
+
 #naive analysis 
 #get price ratio:
 price_ratio <- MEPS_summary_weighted %>%
@@ -81,6 +83,48 @@ summary(fit6)
 
 fit7 <- lm(log(P_g) ~ competitor_cat + t_LOE + P_b, data = test)
 summary(fit7)
+
+MEPS_summary_weighted <- MEPS_summary_weighted %>%
+  mutate(I2 = ifelse(competitor == 2, 1, 0),
+         I3 = ifelse(competitor == 3, 1, 0),
+         I4 = ifelse(competitor >= 4, 1, 0),
+         competitor4 = competitor - 3,
+         I4_N = I4*competitor4)
+
+
+fit8 <- lm(log(P_g) ~ I2 + I3 + I4_N + t_LOE, data = MEPS_summary_weighted)
+summary(fit8)
+
+fit9 <- lm(log(P_g) ~ I2 + I3 + I4_N + t_LOE + P_b_prior_LOE, data = MEPS_summary_weighted)
+summary(fit9)
+
+fit10 <- lm(log(P_g) ~ I2 + I3 + I4 + t_LOE + P_b_prior_LOE, data = MEPS_summary_weighted)
+summary(fit10)
+
+fit11 <- lm(log(P_g) ~ I2 + I3 + I4 + t_LOE, data = MEPS_summary_weighted)
+summary(fit11)
+
+fit12 <- lm(log(P_g) ~ competitor + t_LOE, data = MEPS_summary_weighted)
+summary(fit12)
+
+# count % of different entrant
+n_entrant <- MEPS_summary_weighted %>%
+  filter(competitor != 0) %>% 
+  group_by(competitor) %>%
+  summarise(count = n()) 
+
+n_entrant <- n_entrant %>%
+  group_by(competitor) %>%
+  summarise(count = sum(count)) %>%
+  mutate(p = count/sum(count)) 
+
+N4 <- n_entrant %>%
+  filter(competitor >= 4) %>%
+  mutate(sum = competitor*count) %>%
+  summarise(total_competitor = sum(sum),
+            total = sum(count)) %>%
+  mutate(N4 = total_competitor/total)
+  
 
 #2SLS
 
