@@ -1,5 +1,6 @@
 setwd("~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian")
 
+setwd("C:/Users/shuxian/repos/MEPS_Bayesian")
 load("~/Dropbox/Advanced Method Project/Data/MEPS_summary_weighted.Rdata")
 
 save(MEPS_summary_weighted, file = "MEPS_summary_weighted.Rdata")
