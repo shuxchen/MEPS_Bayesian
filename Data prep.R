@@ -27,7 +27,23 @@ genericnoPIV_included <- genericnoPIV %>%
   left_join(index_time_noPIV) %>%
   mutate(year_LOE = year(index_time)) %>%
   select(index, Appl_No, Product_No, Strength, Appl_Type, approveyear, Approval_Date, year_LOE) 
-  
+
+# get index for molecules without multiple strengths  
+genericnoPIV_Appl_No <- genericnoPIV_included %>%
+  group_by(Appl_No) %>%
+  distinct(Product_No) %>%
+  count()
+
+genericnoPIV_one_strength <- genericnoPIV_Appl_No %>%
+  filter(n == 1) 
+
+genericnoPIV_one_strength <- genericnoPIV_one_strength %>%
+  left_join(genericnoPIV_included, on = 'Appl_No') %>%
+  select(-n)
+
+genericnoPIV_multiple_strengths <- genericnoPIV_included %>%
+  anti_join(genericnoPIV_one_strength, on = 'index')
+
 #get branded drug info
 brandednoPIV <- df %>% 
   right_join(genericnoPIV_id) %>%
@@ -35,12 +51,21 @@ brandednoPIV <- df %>%
 
 name_b_noPIV <- droplevels(brandednoPIV)$Trade_Name
 
-#Merge data and NDC data
-NDC_noPIV <- merge(NDC, genericnoPIV_included, by=c("Appl_No", "Strength"))
+#Merge OB data and NDC data
+NDC_noPIV_one_strength <- merge(NDC, genericnoPIV_one_strength, by=c("Appl_No"))
 
-n_NDC_noPIV <- NDC_noPIV %>%
+NDC_noPIV_one_strength %>%
   distinct(index) %>%
   count()
+
+NDC_noPIV_multiple_strengths <- merge(NDC, genericnoPIV_multiple_strengths, by=c("Appl_No", "Strength"))
+
+NDC_noPIV_multiple_strengths %>%
+  distinct(index) %>%
+  count()
+
+NDC_noPIV <- NDC_noPIV_one_strength %>%
+  bind_rows(NDC_noPIV_multiple_strengths)
 
 #2. PIV
 genericPIV_id <- genericPIV %>% 
@@ -56,6 +81,23 @@ genericPIV_included <- genericPIV %>%
   mutate(year_LOE = year(index_time)) %>%
   select(index, Appl_No, Product_No, Strength, Appl_Type, approveyear, Approval_Date, year_LOE) 
 
+# get index for molecules without multiple strengths 
+genericPIV_Appl_No <- genericPIV_included %>%
+  group_by(Appl_No) %>%
+  distinct(Product_No) %>%
+  count()
+
+genericPIV_one_strength <- genericPIV_Appl_No %>%
+  filter(n == 1) 
+
+genericPIV_one_strength <- genericPIV_one_strength %>%
+  left_join(genericPIV_included, on = 'Appl_No') %>%
+  select(-n)
+
+genericPIV_multiple_strengths <- genericPIV_included %>%
+  anti_join(genericPIV_one_strength, on = 'index')
+
+
 #get branded drug info
 brandedPIV <- df %>% 
   right_join(genericPIV_id) %>%
@@ -63,12 +105,21 @@ brandedPIV <- df %>%
 
 name_b_PIV <- droplevels(brandedPIV)$Trade_Name
 
-#Merge data and NDC data
-NDC_PIV <- merge(NDC, genericPIV_included, by=c("Appl_No", "Strength"))
+#Merge OB data and NDC data
+NDC_PIV_one_strength <- merge(NDC, genericPIV_one_strength, by=c("Appl_No"))
 
-n_NDC_PIV <- NDC_PIV %>%
+NDC_PIV_one_strength %>%
   distinct(index) %>%
   count()
+
+NDC_PIV_multiple_strengths <- merge(NDC, genericPIV_multiple_strengths, by=c("Appl_No", "Strength"))
+
+NDC_PIV_multiple_strengths %>%
+  distinct(index) %>%
+  count()
+
+NDC_PIV <- NDC_PIV_one_strength %>%
+  bind_rows(NDC_PIV_multiple_strengths)
 
 #check NDC code format
 test <- NDC_noPIV[, c("Appl_No", "PRODUCTNDC", "NDC")] 
@@ -88,12 +139,38 @@ branded_included <- df %>%
   inner_join(branded_id) %>%
   select(index, Appl_No, Product_No, Strength, Appl_Type, Approval_Date) 
 
-#Merge data and NDC data
-NDC_branded <- merge(NDC, branded_included, by=c("Appl_No", "Strength"))
+# get index for molecules without multiple strengths 
+branded_Appl_No <- branded_included %>%
+  group_by(Appl_No) %>%
+  distinct(Product_No) %>%
+  count()
 
-n_NDC_branded <- NDC_branded %>%
+branded_one_strength <- branded_Appl_No %>%
+  filter(n == 1) 
+
+branded_one_strength <- branded_one_strength %>%
+  left_join(branded_included, on = 'Appl_No') %>%
+  select(-n)
+
+branded_multiple_strengths <- branded_included %>%
+  anti_join(branded_one_strength, on = 'index')
+
+#Merge data and NDC data
+
+NDC_branded_one_strength <- merge(NDC, branded_one_strength, by=c("Appl_No"))
+
+NDC_branded_one_strength %>%
   distinct(index) %>%
   count()
+
+NDC_branded_multiple_strengths <- merge(NDC, branded_multiple_strengths, by=c("Appl_No", "Strength"))
+
+NDC_branded_multiple_strengths %>%
+  distinct(index) %>%
+  count()
+
+NDC_branded <- NDC_branded_one_strength %>%
+  bind_rows(NDC_branded_multiple_strengths)
 
 NDC_branded_id <- NDC_branded %>%
   distinct(index)
@@ -179,6 +256,14 @@ MEPS2006 <- MEPS2006 %>%
          price_private = `AMOUNT PAID, PRIVATE INSURANCE (IMPUTED)`
   ) %>%
   rename(weight = `FINAL PERSON LEVEL WEIGHT, 2006`)
+
+MEPS2006 %>%
+  filter(is.na(RXNDC9)) %>%
+  count()
+
+MEPS2006 %>%
+  filter(RXNAME == '-9') %>%
+  count()
 
 ####################################################################################
 ##Load MEPS 2007 data
@@ -809,3 +894,19 @@ write.xlsx(MEPS_summary_weighted, "MEPS_summary_weighted.xlsx")
 
 save(MEPS_summary_weighted, file = "~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian/MEPS_summary_weighted.Rdata")
 write.xlsx(MEPS_summary_weighted, "~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian/MEPS_summary_weighted.xlsx")
+
+
+
+# Check mismatch of NDC code
+index_all_PIV <- genericPIV %>%
+  distinct(index)
+
+index_all_noPIV <- genericnoPIV %>%
+  distinct(index)
+
+index_all <- index_all_PIV %>%
+  bind_rows(index_all_noPIV) %>%
+  arrange(index)
+
+index_all <- index_all$index
+

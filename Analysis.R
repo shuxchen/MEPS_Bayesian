@@ -19,14 +19,17 @@ generic_price_id$ll <- seq.int(nrow(generic_price_id))
 generic_price <- generic_price %>%
   left_join(generic_price_id) %>%
   mutate(intercept = 1) %>%
-  select(Y, ll, intercept, competitor, t_LOE)
+  select(Y, ll, intercept, competitor, P_b_prior_LOE, t_LOE, year, oral, inject, ATCA:ATCV)
 
 generic_price %>% 
   filter(is.na(t_LOE)) %>%
   data.frame()
 
-#generic_price <- generic_price %>% 
-#  filter(!is.na(t_LOE)) 
+generic_price <- generic_price %>% 
+  filter(!is.na(P_b_prior_LOE)) 
+
+generic_price <- generic_price %>% 
+  mutate(P_b_prior_LOE = log(P_b_prior_LOE)) 
 
 #1.2 Split data
 spec = c(train = .45, test = .15, validate = .4)
@@ -38,7 +41,9 @@ n_index <- generic_price %>%
   distinct(ll) %>%
   count()
 
-list <- seq(1, 130, by = 1) %>%
+n_index <- n_index$n
+
+list <- seq(1, n_index, by = 1) %>%
   data.frame()
 
 g = sample(cut(
@@ -55,7 +60,17 @@ generic_price <- generic_price_with_t %>%
 generic_price <- generic_price_with_t %>%
   mutate(year = year - 2012)
 generic_price <- generic_price %>%
-  select(-t_LOE, -year)
+  select(1:5)
+
+#generic_price <- generic_price_with_t %>%
+#  select(1:5, t_LOE) 
+
+#generic_price <- generic_price_with_t %>%
+#  select(1:5, year) %>%
+#  mutate(year = year - 2012)
+
+generic_price <- generic_price_with_t %>%
+  select(1:5, oral, inject) 
 
 generic_price_train <- generic_price %>%
   inner_join(res$train, by = c("ll" = "."))
@@ -100,15 +115,50 @@ stan.dat_generic_price_train <- list(N = N,
 fit0 <- stan(
   file = "model.stan",  # Stan program
   data = stan.dat_generic_price_train,    # named list of data
-  chains = 4,             # number of Markov chains
-  warmup = 5000,          # number of warmup iterations per chain
-  iter = 15000,           # total number of iterations per chain
-  cores = 4,              # number of cores (could use one per chain)
+  chains = 1,             # number of Markov chains
+  warmup = 1000,          # number of warmup iterations per chain
+  iter = 6000,           # total number of iterations per chain
+  #cores = 4,              # number of cores (could use one per chain)
   refresh = 0,            # no progress shown
-  control = list(adapt_delta = 0.9999, max_treedepth = 15)
+  control = list(adapt_delta = 0.999, max_treedepth = 15)
+)
+
+fit0 <- stan(
+  file = "model_log_lik.stan",  # Stan program
+  data = stan.dat_generic_price_train,    # named list of data
+  chains = 1,             # number of Markov chains
+  warmup = 1000,          # number of warmup iterations per chain
+  iter = 6000,           # total number of iterations per chain
+  #cores = 4,              # number of cores (could use one per chain)
+  refresh = 0,            # no progress shown
+  control = list(adapt_delta = 0.999, max_treedepth = 15)
 )
 
 plot(fit0, plotfun = "trace", pars = c("mu[2]"), inc_warmup = TRUE)
+
+print(fit0)
+
+log_lik_0 <- extract_log_lik(fit0)
+waic_0 <- waic(log_lik_0)
+waic_0
+
+fit1 <- stan(
+  file = "model_log_lik.stan",  # Stan program
+  data = stan.dat_generic_price_train,    # named list of data
+  chains = 1,             # number of Markov chains
+  warmup = 1000,          # number of warmup iterations per chain
+  iter = 6000,           # total number of iterations per chain
+  #cores = 4,              # number of cores (could use one per chain)
+  refresh = 0,            # no progress shown
+  control = list(adapt_delta = 0.999, max_treedepth = 15)
+)
+
+log_lik_1 <- extract_log_lik(fit1)
+waic_1 <- waic(log_lik_1)
+waic_1
+
+waic_diff <- loo_compare(waic_0, waic_1)
+waic_diff
 
 N_test <- nrow(generic_price_test)
 L_test <- length(unique(generic_price_test$ll))
@@ -138,8 +188,46 @@ fit1 <- stan(
 
 plot(fit1, plotfun = "trace", pars = c("mu[2]"), inc_warmup = TRUE)
 
+fit2 <- stan(
+  file = "model_predict_log_lik.stan",  # Stan program
+  data = stan.dat_generic_price_test,    # named list of data
+  chains = 4,             # number of Markov chains
+  warmup = 5000,          # number of warmup iterations per chain
+  iter = 15000,           # total number of iterations per chain
+  cores = 4,              # number of cores (could use one per chain)
+  refresh = 0,            # no progress shown
+  control = list(adapt_delta = 0.9999, max_treedepth = 15)
+)
+
+plot(fit2, plotfun = "trace", pars = c("mu[2]"), inc_warmup = TRUE)
+
+log_lik_1 <- extract_log_lik(fit2)
+waic_1 <- waic(log_lik_1)
+waic_1
+
+log_lik_2 <- extract_log_lik(fit2)
+waic_2 <- waic(log_lik_2)
+waic_2
+
+log_lik_3 <- extract_log_lik(fit2)
+waic_3 <- waic(log_lik_3)
+waic_3
+
+log_lik_4 <- extract_log_lik(fit2)
+waic_4 <- waic(log_lik_4)
+waic_4
+
+waic_diff <- loo_compare(waic_1, waic_2, waic_3, waic_4)
+waic_diff
 
 
+loo_1 <- loo(log_lik_1)
+loo_2 <- loo(log_lik_2)
+loo_3 <- loo(log_lik_3)
+loo_diff <- loo_compare(loo_1, loo_2, loo_3)
+loo_diff
+
+print(loo_1)
 test <- lm(Y ~ competitor, data = generic_price_train)
 summary(test)
 

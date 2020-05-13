@@ -88,7 +88,8 @@ MEPS_summary_weighted <- MEPS_summary_weighted %>%
   mutate(I2 = ifelse(competitor == 2, 1, 0),
          I3 = ifelse(competitor == 3, 1, 0),
          I4 = ifelse(competitor >= 4, 1, 0),
-         competitor4 = competitor - 3,
+         #competitor4 = competitor - 3,
+         competitor4 = competitor,
          I4_N = I4*competitor4)
 
 

@@ -5,6 +5,12 @@ data {
   real y[N];                     //Outcome (log price)   
   int<lower=1,upper=L> ll[N];    //Index 
   row_vector[K] x[N];            //Predictors
+  
+  int<lower=0> N_test;                //Number of observations
+  int<lower=1> L_test;                //Number of molecule-route-strength units/index
+  int<lower=1,upper=L_test> ll_test[N_test];    //Index 
+  row_vector[K] x_test[N_test];            //Predictors
+  real y_test[N_test];                     //Outcome (log price)   
 }
 
 parameters {
@@ -12,18 +18,36 @@ parameters {
   real<lower=0> omega[K];
   real<lower=0> sigma;
   vector[K] beta[L];
+  vector[K] beta_pred[L_test];
+
 }
 
 model {
   mu[1] ~ normal(0, 100);
   mu[2] ~ normal(-0.08, 0.08);
   mu[3] ~ normal(0, 100);
+  mu[4] ~ normal(0, 100);
+
+
   omega ~ inv_gamma(0.01, 0.01);
   sigma ~ inv_gamma(0.01, 0.01);
   
   for (l in 1:L)
-  beta[l] ~ normal(mu, omega);
+    beta[l] ~ normal(mu, omega);
   
   for (n in 1:N)
     y[n] ~ normal(x[n] * beta[ll[n]], sigma);
+    
+  for (l in 1:L_test)
+    beta_pred[l] ~ normal(mu, omega);
+    
+}
+
+generated quantities {
+  vector[N_test] log_lik;
+  //vector[K] beta_pred[L_test];
+
+  for(n in 1:N_test) {
+    log_lik[n] = normal_lpdf(y_test[n] | x_test[n]*beta_pred[ll_test[n]], sigma);
+  }
 }

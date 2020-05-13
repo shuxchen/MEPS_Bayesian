@@ -15,15 +15,14 @@ parameters {
 }
 
 model {
-  mu[1] ~ normal(0, 100);
-  mu[2] ~ normal(-0.08, 0.08);
-  mu[3] ~ normal(0, 100);
-  omega ~ inv_gamma(0.01, 0.01);
-  sigma ~ inv_gamma(0.01, 0.01);
-  
+  target += normal_lpdf(mu[1] | 0, sqrt(100));
+  target += normal_lpdf(mu[2] | -0.08, 0.08);
+  target += inv_gamma_lpdf(omega | 0.01, 0.01);
+  target += inv_gamma_lpdf(sigma | 0.01, 0.01);
+
   for (l in 1:L)
-  beta[l] ~ normal(mu, omega);
-  
+    target += normal_lpdf(beta[l] | mu, sqrt(omega));
+
   for (n in 1:N)
-    y[n] ~ normal(x[n] * beta[ll[n]], sigma);
+    target += normal_lpdf(y[n] | x[n] * beta[ll[n]], sqrt(sigma));
 }
