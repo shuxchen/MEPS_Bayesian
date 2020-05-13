@@ -93,6 +93,7 @@ assign_id <- function(df){
     arrange(Y, ll, intercept, competitor)
 }
 
+# split data
 generic_price_train <- assign_id(generic_price_train) 
 generic_price_test <- assign_id(generic_price_test)
 generic_price_validate <- assign_id(generic_price_validate)
