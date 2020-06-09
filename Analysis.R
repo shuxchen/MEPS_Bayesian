@@ -1,9 +1,12 @@
 setwd("~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian")
 
-setwd("C:/Users/shuxian/repos/MEPS_Bayesian")
 load("~/Dropbox/Advanced Method Project/Data/MEPS_summary_weighted.Rdata")
 
+setwd("C:/Users/shuxian/repos/MEPS_Bayesian")
+load("MEPS_summary_weighted.Rdata")
+
 save(MEPS_summary_weighted, file = "MEPS_summary_weighted.Rdata")
+
 ##1. Generic price 
 #log(generic price) ~ N 
 
@@ -33,9 +36,9 @@ generic_price <- generic_price %>%
   mutate(P_b_prior_LOE = log(P_b_prior_LOE)) 
 
 #1.2 Split data
-spec = c(train = .45, test = .15, validate = .4)
+#spec = c(train = .45, test = .15, validate = .4)
 
-#spec = c(train = .6, validate = .4)
+spec = c(train = .6, test = .4)
 
 
 n_index <- generic_price %>%
@@ -61,7 +64,7 @@ generic_price <- generic_price_with_t %>%
 generic_price <- generic_price_with_t %>%
   mutate(year = year - 2012)
 generic_price <- generic_price %>%
-  select(1:5)
+  select(1:6)
 
 #generic_price <- generic_price_with_t %>%
 #  select(1:5, t_LOE) 
@@ -70,8 +73,8 @@ generic_price <- generic_price %>%
 #  select(1:5, year) %>%
 #  mutate(year = year - 2012)
 
-generic_price <- generic_price_with_t %>%
-  select(1:5, oral, inject) 
+#generic_price <- generic_price_with_t %>%
+#  select(1:5, oral, inject) 
 
 generic_price_train <- generic_price %>%
   inner_join(res$train, by = c("ll" = "."))
@@ -173,35 +176,104 @@ stan.dat_generic_price_test <- list(N = N,
                                     x = generic_price_train[, 2:(K+1)],
                                     N_test = N_test, 
                                     L_test = L_test, 
-                                    y_test = generic_price_test$Y, 
+                                    #y_test = generic_price_test$Y, 
                                     ll_test = generic_price_test$ll, 
                                     x_test = generic_price_test[, 2:(K+1)])
 
 fit1 <- stan(
   file = "model_predict.stan",  # Stan program
   data = stan.dat_generic_price_test,    # named list of data
-  chains = 4,             # number of Markov chains
-  warmup = 5000,          # number of warmup iterations per chain
-  iter = 15000,           # total number of iterations per chain
+  chains = 1,             # number of Markov chains
+  warmup = 1000,          # number of warmup iterations per chain
+  iter = 2000,           # total number of iterations per chain
   cores = 4,              # number of cores (could use one per chain)
   refresh = 0,            # no progress shown
-  control = list(adapt_delta = 0.9999, max_treedepth = 15)
+  control = list(adapt_delta = 0.999, max_treedepth = 15)
 )
 
 plot(fit1, plotfun = "trace", pars = c("mu[2]"), inc_warmup = TRUE)
 
 fit2 <- stan(
-  file = "model_predict_log_lik.stan",  # Stan program
+  file = "model_predict_log_lik_noncentered.stan",  # Stan program
   data = stan.dat_generic_price_test,    # named list of data
   chains = 4,             # number of Markov chains
-  warmup = 5000,          # number of warmup iterations per chain
-  iter = 15000,           # total number of iterations per chain
+  warmup = 2000,          # number of warmup iterations per chain
+  iter = 7000,           # total number of iterations per chain
   cores = 4,              # number of cores (could use one per chain)
-  refresh = 0,            # no progress shown
-  control = list(adapt_delta = 0.9999, max_treedepth = 15)
+  #refresh = 0,            # no progress shown
+  control = list(adapt_delta = 0.999, max_treedepth = 15)
 )
 
+pairs(fit2, pars = c("mu[1]", "mu[2]", "mu[3]", "omega[1]", "omega[2]", "omega[3]","sigma", "lp__"))
+
+
 plot(fit2, plotfun = "trace", pars = c("mu[2]"), inc_warmup = TRUE)
+
+fit3 <- stan(
+  file = "model_predict_noncentered.stan",  # Stan program
+  data = stan.dat_generic_price_test,    # named list of data
+  chains = 1,             # number of Markov chains
+  warmup = 2000,          # number of warmup iterations per chain
+  iter = 7000,           # total number of iterations per chain
+  #cores = 4,              # number of cores (could use one per chain)
+  refresh = 0#,            # no progress shown
+  #control = list(adapt_delta = 0.999, max_treedepth = 15)
+)
+
+print(fit3)
+fit3_results <- extract(fit3)
+fit3_results$y_test
+fit3_results$y_test[,1]
+fit3_results$beta_pred[, , 1]
+fit3_results$beta_pred[, , 2]
+
+median(fit3_results$beta_pred[, , 2])
+quantile(fit3_results$beta_pred[, , 2], probs = c(.025, .975))
+
+median(fit3_results$y_test[,1])
+quantile(fit3_results$y_test[,1], probs = c(.025, .975))
+
+median(fit3_results$y_test[,2])
+quantile(fit3_results$y_test[,2], probs = c(.025, .975))
+
+median(fit3_results$y_test[,207])
+quantile(fit3_results$y_test[,207], probs = c(.025, .975))
+
+
+fit4 <- stan(
+  file = "model_predict_noncentered_mu.stan",  # Stan program
+  data = stan.dat_generic_price_test,    # named list of data
+  chains = 1,             # number of Markov chains
+  warmup = 2000,          # number of warmup iterations per chain
+  iter = 7000,           # total number of iterations per chain
+  #cores = 4,              # number of cores (could use one per chain)
+  refresh = 0#,            # no progress shown
+  #control = list(adapt_delta = 0.999, max_treedepth = 15)
+)
+print(fit4)
+fit4_results <- extract(fit4)
+
+median(fit4_results$beta_pred[, , 2])
+quantile(fit4_results$beta_pred[, , 2], probs = c(.025, .975))
+
+mean(fit4_results$y_test[,1])
+quantile(fit4_results$y_test[,1], probs = c(.025, .975))
+
+median(fit4_results$y_test[,2])
+quantile(fit4_results$y_test[,2], probs = c(.025, .975))
+
+mean(fit4_results$y_test[,207])
+quantile(fit4_results$y_test[,207], probs = c(.025, .975))
+
+mean(fit4_results$y_test[,206])
+quantile(fit4_results$y_test[,206], probs = c(.025, .975))
+
+
+
+
+
+
+
 
 log_lik_1 <- extract_log_lik(fit2)
 waic_1 <- waic(log_lik_1)

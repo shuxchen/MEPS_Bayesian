@@ -56,17 +56,45 @@ save(price_ratio_prior_LOE, file = "price_ratio_prior_LOE.Rdata")
 
 
 ##OLS
-fit1 <- lm(log(P_g) ~ competitor, data = MEPS_summary)
+MEPS_summary_weighted_noNA <- MEPS_summary_weighted %>%
+  filter(!is.na(P_g))
+fit1 <- lm(log(P_g) ~ competitor, data = MEPS_summary_weighted_noNA)
 summary(fit1)
 
-fit2 <- lm(log(P_b) ~ competitor, data = MEPS_summary)
-summary(fit2)
+MEPS_summary_weighted_noNA$res <- fit1$residuals
+ggplot(data = MEPS_summary_weighted_noNA, aes(y = res, x = competitor)) + 
+  geom_point(col = 'blue') + 
+  geom_abline(slope = 0)
+
+var.func <- lm(res^2 ~ competitor, data = MEPS_summary_weighted_noNA)
+summary(var.func)
+
+bptest(fit1)
+
+log(var(MEPS_summary_weighted_noNA$P_g))
+var(log(MEPS_summary_weighted_noNA$P_g))
+
 
 fit3 <- lm(log(P_g) ~ competitor + P_b, data = MEPS_summary)
 summary(fit3)
 
-fit4 <- lm(log(P_g) ~ competitor + t_LOE + P_b, data = MEPS_summary_weighted)
+MEPS_summary_weighted_noNA <- MEPS_summary_weighted %>%
+  filter(!is.na(P_g), !is.na(P_b_prior_LOE))
+
+fit4 <- lm(log(P_g) ~ competitor + t_LOE + log(P_b_prior_LOE), data = MEPS_summary_weighted_noNA)
 summary(fit4)
+
+MEPS_summary_weighted_noNA$res <- fit4$residuals
+MEPS_summary_weighted_noNA$y_hat <- fit4$fitted.values
+
+ggplot(data = MEPS_summary_weighted_noNA, aes(y = res, x = y_hat)) + 
+  geom_point(col = 'blue') + 
+  geom_abline(slope = 0)
+
+
+bptest(fit4)
+
+
 
 fit5 <- lm(log(P_g) ~ as.factor(competitor) + t_LOE + P_b, data = MEPS_summary_weighted)
 summary(fit5)

@@ -16,10 +16,15 @@ parameters {
 
 model {
   mu[1] ~ normal(0, 100);
-  mu[2] ~ normal(-0.08, 0.08);
-  mu[3] ~ normal(0, 100);
-  mu[3] ~ normal(0, 100);
-  mu[3] ~ normal(0, 100);
+  mu[2] ~ normal(-0.09, 0.01);
+  mu[3] ~ normal(-0.08, 0.02);
+  mu[4] ~ normal(-0.02, 0.01);
+  //mu[2] ~ normal(0, 100);
+  //mu[3] ~ normal(0, 100);
+  //mu[4] ~ normal(0, 100);
+  mu[5] ~ normal(0, 100);
+  mu[6] ~ normal(0, 100);
+
 
   omega ~ inv_gamma(0.01, 0.01);
   sigma ~ inv_gamma(0.01, 0.01);
