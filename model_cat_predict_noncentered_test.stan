@@ -19,7 +19,7 @@ parameters {
   vector<lower=0>[K] omega;
   real<lower=0> sigma;
   vector[K] alpha[L];
-  //real alpha_pred;
+  vector[K] alpha_pred[L_test];
 
 }
 
@@ -31,7 +31,7 @@ transformed parameters {
     beta[l] = mu + alpha[l].*omega;
     
   for (l in 1:L_test)
-    beta_pred[l] = mu;
+    beta_pred[l] = mu + alpha_pred[l].*omega;
 
 }
 
@@ -62,8 +62,9 @@ model {
   
   for (l in 1:L)
     alpha[l] ~ normal(0, 1);
-  //alpha_pred ~ normal(0, 1);
-
+    
+  for (l in 1:L_test)
+    alpha_pred[l] ~ normal(0, 1);
   
   for (n in 1:N)
     y[n] ~ normal(x[n] * beta[ll[n]], sigma);

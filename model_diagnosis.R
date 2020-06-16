@@ -162,11 +162,11 @@ print(fit2)
 ratios2 <- neff_ratio(fit2)
 print(ratios2)
 
-set.seed(1856)
+set.seed(1999)
 y_test <- generic_price_test$Y
-y_test_rep <- extract(fit2)[["y_pred_test"]]
-samp100 <- sample(nrow(y_test_rep), 100)
-ppc_dens_overlay(y_test, y_test_rep[samp100, ])  
+y_test_rep_noninformative <- extract(fit2)[["y_pred_test"]]
+samp100 <- sample(nrow(y_test_rep), 1000)
+ppc_dens_overlay(y_test, y_test_rep_noninformative[samp100, ])  
 
 ppc_intervals(
   y = y_test,
@@ -185,7 +185,7 @@ ppc_stat(y_test, y_test_rep, stat = 'median')
 ppc_stat(y_test, y_test_rep, stat = 'mean')
 
 quants <- c(0.025,0.975)
-y_test_rep_noninformative_summary <- apply(y_test_rep, 2 , quantile , probs = quants , na.rm = TRUE )
+y_test_rep_noninformative_summary <- apply(y_test_rep_noninformative, 2 , quantile , probs = quants , na.rm = TRUE )
 
 y_test_pred_noninformative <- as.data.frame(t(y_test_rep_noninformative_summary))
 
@@ -230,7 +230,7 @@ print(ratios3)
 
 set.seed(1856)
 y_test_rep_informative <- extract(fit3)[["y_pred_test"]]
-samp100 <- sample(nrow(y_test_rep_informative), 100)
+samp100 <- sample(nrow(y_test_rep_informative), 1000)
 ppc_dens_overlay(y_test, y_test_rep_informative[samp100, ])  
 
 quants <- c(0.025,0.975)
