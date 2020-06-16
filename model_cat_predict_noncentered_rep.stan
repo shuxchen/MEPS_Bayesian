@@ -5,6 +5,7 @@ data {
   real y[N];                     //Outcome (log price)   
   int<lower=1,upper=L> ll[N];    //Index 
   row_vector[K] x[N];            //Predictors
+  real informative_coefficient;
   
   //int<lower=0> N_test;                //Number of observations
   //int<lower=1> L_test;                //Number of molecule-route-strength units/index
@@ -36,11 +37,18 @@ transformed parameters {
 
 model {
   mu[1] ~ normal(0, 100);
-  mu[2] ~ normal(-0.09, 0.01);
-  mu[3] ~ normal(-0.08, 0.02);
-  mu[4] ~ normal(-0.02, 0.01);
   mu[5] ~ normal(0, 100);
   mu[6] ~ normal(0, 100);
+  
+  if (informative_coefficient == 1){
+    mu[2] ~ normal(-0.09, 0.01);
+    mu[3] ~ normal(-0.08, 0.02);
+    mu[4] ~ normal(-0.02, 0.01);
+  } else {
+    mu[2] ~ normal(0, 100);
+    mu[3] ~ normal(0, 100);
+    mu[4] ~ normal(0, 100);
+  }
 
   omega[1] ~ cauchy(0, 10);
   omega[2] ~ cauchy(0, 2.5);

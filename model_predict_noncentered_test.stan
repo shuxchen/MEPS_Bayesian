@@ -7,10 +7,10 @@ data {
   row_vector[K] x[N];            //Predictors
   real informative_coefficient;
   
-  //int<lower=0> N_test;                //Number of observations
-  //int<lower=1> L_test;                //Number of molecule-route-strength units/index
-  //int<lower=1,upper=L_test> ll_test[N_test];    //Index 
-  //row_vector[K] x_test[N_test];            //Predictors
+  int<lower=0> N_test;                //Number of observations
+  int<lower=1> L_test;                //Number of molecule-route-strength units/index
+  int<lower=1,upper=L_test> ll_test[N_test];    //Index 
+  row_vector[K] x_test[N_test];            //Predictors
   //real y_test[N_test];                     //Outcome (log price)   
 }
 
@@ -19,19 +19,19 @@ parameters {
   vector<lower=0>[K] omega;
   real<lower=0> sigma;
   vector[K] alpha[L];
-  //real alpha_pred;
+  vector[K] alpha_pred[L_test];
 
 }
 
 transformed parameters {
   vector[K] beta[L];
-  //vector[K] beta_pred[L_test];
+  vector[K] beta_pred[L_test];
 
   for (l in 1:L)
     beta[l] = mu + alpha[l].*omega;
     
-  //for (l in 1:L_test)
-  //  beta_pred[l] = mu;
+  for (l in 1:L_test)
+    beta_pred[l] = mu + alpha_pred[l].*omega;
 
 }
 
@@ -39,7 +39,7 @@ model {
   mu[1] ~ normal(0, 100);
   
   if (informative_coefficient == 1){
-    mu[2] ~ normal(-0.075, 0.051);
+    mu[2] ~ normal(-0.075, 0.01);
   } else {
     mu[2] ~ normal(0, 100);
   }
@@ -56,7 +56,9 @@ model {
   
   for (l in 1:L)
     alpha[l] ~ normal(0, 1);
-    //alpha_pred ~ normal(0, 1);
+    
+  for (l in 1:L_test)
+    alpha_pred[l] ~ normal(0, 1);
 
   
   for (n in 1:N)
@@ -68,10 +70,18 @@ model {
 generated quantities {
   vector[N] log_lik;
   vector[N] y_pred;
+  vector[N_test] y_pred_test;
+
 
   for(n in 1:N) {
     real y_hat = x[n]*beta[ll[n]];
     log_lik[n] = normal_lpdf(y[n] | y_hat , sigma);
     y_pred[n] = normal_rng(y_hat, sigma);
+  }
+  
+
+  for(n in 1:N_test) {
+    y_pred_test[n] = normal_rng(x_test[n] * beta_pred[ll_test[n]], sigma);
+
   }
 }

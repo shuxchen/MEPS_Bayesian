@@ -12,7 +12,8 @@ save(MEPS_summary_weighted, file = "MEPS_summary_weighted.Rdata")
 
 #1.1 Data construction
 generic_price <- MEPS_summary_weighted %>%
-  filter(!is.na(P_g)) %>%
+  filter(!is.na(P_g),
+         competitor > 0) %>%
   mutate(Y = log(P_g)) 
 
 generic_price_id <- generic_price %>% 
@@ -101,6 +102,9 @@ assign_id <- function(df){
 generic_price_train <- assign_id(generic_price_train) 
 generic_price_test <- assign_id(generic_price_test)
 generic_price_validate <- assign_id(generic_price_validate)
+
+save(generic_price_train, file = "generic_price_train.RData")
+save(generic_price_test, file = "generic_price_test.RData")
 
 
 
