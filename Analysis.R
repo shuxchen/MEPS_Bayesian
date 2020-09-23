@@ -106,6 +106,8 @@ generic_price_validate <- assign_id(generic_price_validate)
 save(generic_price_train, file = "generic_price_train.RData")
 save(generic_price_test, file = "generic_price_test.RData")
 
+load("generic_price_train.RData")
+load("generic_price_test.RData")
 
 
 #1.3 Stan model 
@@ -113,6 +115,10 @@ set.seed(123)
 N <- nrow(generic_price_train)
 K <- ncol(generic_price_train) - 2
 L <- length(unique(generic_price_train$ll))
+
+N_test <- nrow(generic_price_test)
+L_test <- length(unique(generic_price_test$ll))
+
 
 stan.dat_generic_price_train <- list(N = N, 
                  K = K,
@@ -168,9 +174,6 @@ waic_1
 
 waic_diff <- loo_compare(waic_0, waic_1)
 waic_diff
-
-N_test <- nrow(generic_price_test)
-L_test <- length(unique(generic_price_test$ll))
 
 stan.dat_generic_price_test <- list(N = N, 
                                     K = K,

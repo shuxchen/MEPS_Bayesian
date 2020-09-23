@@ -37,34 +37,31 @@ transformed parameters {
 
 model {
   mu[1] ~ normal(0, 100);
-  mu[5] ~ normal(0, 100);
-  mu[6] ~ normal(0, 100);
   
   if (informative_coefficient == 1){
-    mu[2] ~ normal(-0.09, 0.01);
-    mu[3] ~ normal(-0.08, 0.02);
-    mu[4] ~ normal(-0.02, 0.01);
+    //mu[2] ~ normal(0.0097, 0.005);
+    mu[2] ~ normal(0.007, 0.042);
+
   } else {
     mu[2] ~ normal(0, 100);
-    mu[3] ~ normal(0, 100);
-    mu[4] ~ normal(0, 100);
   }
+  
+  mu[3] ~ normal(0, 100);
+  mu[4] ~ normal(0, 100);
 
   omega[1] ~ cauchy(0, 10);
   omega[2] ~ cauchy(0, 2.5);
   omega[3] ~ cauchy(0, 2.5);
   omega[4] ~ cauchy(0, 2.5);
-  omega[5] ~ cauchy(0, 2.5);
-  omega[6] ~ cauchy(0, 2.5);
-  //omega ~ cauchy(0, 2.5);
 
-  sigma ~ inv_gamma(0.0001, 0.0001);
+  sigma ~ inv_gamma(0.01, 0.01);
   
   for (l in 1:L)
     alpha[l] ~ normal(0, 1);
     
   for (l in 1:L_test)
     alpha_pred[l] ~ normal(0, 1);
+
   
   for (n in 1:N)
     y[n] ~ normal(x[n] * beta[ll[n]], sigma);
@@ -84,9 +81,9 @@ generated quantities {
     y_pred[n] = normal_rng(y_hat, sigma);
   }
   
+
   for(n in 1:N_test) {
-    #y_pred_test[n] = lognormal_rng(x_test[n] * beta_pred[ll_test[n]], sigma);
-    y_pred_test[n] = lognormal_rng(x_test[n] * mu, sigma);
+    y_pred_test[n] = normal_rng(x_test[n] * beta_pred[ll_test[n]], sigma);
 
   }
 }

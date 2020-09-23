@@ -185,26 +185,47 @@ fit2 <- stan(
   #control = list(adapt_delta = 0.9, max_treedepth = 18)
 )
 
-y_test <- generic_price_cat_test$Y
+y_test <- exp(generic_price_cat_test$Y)
 
-quants <- c(0.025,0.975)
+quants <- c(0.025, 0.05, 0.975, 0.95)
 y_test_cat_noninformative <- extract(fit2)[["y_pred_test"]]
 
 y_test_cat_noninformative_summary <- apply(y_test_cat_noninformative, 2 , quantile , probs = quants , na.rm = TRUE )
 
 y_test_cat_pred_noninformative <- as.data.frame(t(y_test_cat_noninformative_summary))
 
-y_test_cat_pred_noninformative <- cbind(y_test_cat_pred_noninformative, generic_price_cat_test$Y)
+y_test_cat_pred_noninformative <- cbind(y_test_cat_pred_noninformative, exp(generic_price_cat_test$Y))
 
 y_test_cat_pred_noninformative <- y_test_cat_pred_noninformative %>%
-  rename(Y = `generic_price_cat_test$Y`) %>%
-  mutate(CI_covered = ifelse(Y >= `2.5%` & Y <= `97.5%`, 1, 0))
+  rename(Y = `exp(generic_price_cat_test$Y)`) %>%
+  mutate(CI_covered_95 = ifelse(Y >= `2.5%` & Y <= `97.5%`, 1, 0),
+         CI_covered_90 = ifelse(Y >= `5%` & Y <= `95%`, 1, 0))
 
-mean(y_test_cat_pred_noninformative$CI_covered)
+mean(y_test_cat_pred_noninformative$CI_covered_95)
+mean(y_test_cat_pred_noninformative$CI_covered_90)
+
+MSE_test_cat_noninformative <- 0
+for (i in 1:N_test){
+  MSE_test_cat_noninformative = MSE_test_cat_noninformative + (mean(y_test_cat_noninformative[,i]) - exp(generic_price_cat_test$Y[i]))^2
+}
+MSE_test_cat_noninformative <- MSE_test_cat_noninformative/N_test
+
+
+median(y_test_cat_noninformative)
+print(fit2, "y_pred_test", probs=c(.025,.975))
+
 
 samp200 <- sample(nrow(y_test_cat_noninformative), 1000)
 ppc_dens_overlay(y_test, y_test_cat_noninformative[samp200, ]) +
   ylim(0,0.7)
+
+log_lik_2 <- extract_log_lik(fit2)
+loo_2 <- loo(log_lik_2)
+print(loo_2)
+
+waic_2 <- waic(log_lik_2)
+
+
 
 
 stan.dat_generic_price_cat_test_informative <- list(N = N, 
@@ -237,17 +258,43 @@ y_test_cat_informative_summary <- apply(y_test_cat_informative, 2 , quantile , p
 
 y_test_cat_pred_informative <- as.data.frame(t(y_test_cat_informative_summary))
 
-y_test_cat_pred_informative <- cbind(y_test_cat_pred_informative, generic_price_cat_test$Y)
+y_test_cat_pred_informative <- cbind(y_test_cat_pred_informative, exp(generic_price_cat_test$Y))
 
 y_test_cat_pred_informative <- y_test_cat_pred_informative %>%
-  rename(Y = `generic_price_cat_test$Y`) %>%
-  mutate(CI_covered = ifelse(Y >= `2.5%` & Y <= `97.5%`, 1, 0))
+  rename(Y = `exp(generic_price_cat_test$Y)`) %>%
+  mutate(CI_covered_95 = ifelse(Y >= `2.5%` & Y <= `97.5%`, 1, 0),
+         CI_covered_90 = ifelse(Y >= `5%` & Y <= `95%`, 1, 0))
 
-mean(y_test_cat_pred_informative$CI_covered)
+mean(y_test_cat_pred_informative$CI_covered_95)
+mean(y_test_cat_pred_informative$CI_covered_90)
+
+MSE_test_cat_informative <- 0
+for (i in 1:N_test){
+  MSE_test_cat_informative = MSE_test_cat_informative + (mean(y_test_cat_informative[,i]) - exp(generic_price_cat_test$Y[i]))^2
+}
+MSE_test_cat_informative <- MSE_test_cat_informative/N_test
+
+posterior_interval(fit3)
+
+print(fit3, "y_pred_test", probs=c(.025,.975))
+
 
 samp200 <- sample(nrow(y_test_cat_informative), 1000)
 ppc_dens_overlay(y_test, y_test_cat_informative[samp200, ]) +
   ylim(0,0.7)
+
+log_lik_3 <- extract_log_lik(fit3)
+loo_3 <- loo(log_lik_3)
+print(loo_3)
+
+waic_3 <- waic(log_lik_3)
+
+loo_diff <- loo_compare(loo_2, loo_3)
+print(loo_diff)
+
+waic_diff <- loo_compare(waic_2, waic_3)
+print(waic_diff)
+
 
 # do not use the hierarchical structure to get predicted test result 
 fit4 <- stan(

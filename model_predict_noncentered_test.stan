@@ -39,7 +39,7 @@ model {
   mu[1] ~ normal(0, 100);
   
   if (informative_coefficient == 1){
-    mu[2] ~ normal(-0.075, 0.01);
+    mu[2] ~ normal(-0.075, 0.051);
   } else {
     mu[2] ~ normal(0, 100);
   }
@@ -81,7 +81,8 @@ generated quantities {
   
 
   for(n in 1:N_test) {
-    y_pred_test[n] = normal_rng(x_test[n] * beta_pred[ll_test[n]], sigma);
+    #y_pred_test[n] = lognormal_rng(x_test[n] * beta_pred[ll_test[n]], sigma);
+    y_pred_test[n] = lognormal_rng(x_test[n] * mu, sigma);
 
   }
 }

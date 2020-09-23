@@ -10,6 +10,10 @@ N <- nrow(generic_price_train)
 K <- ncol(generic_price_train) - 2
 L <- length(unique(generic_price_train$ll))
 
+N_test <- nrow(generic_price_test)
+L_test <- length(unique(generic_price_test$ll))
+
+
 stan.dat_generic_price_train <- list(N = N, 
                                      K = K,
                                      L = L, 
@@ -127,10 +131,6 @@ waic_diff <- loo_compare(waic_0, waic_1)
 waic_diff
 
 
-
-N_test <- nrow(generic_price_test)
-L_test <- length(unique(generic_price_test$ll))
-
 stan.dat_generic_price_test_noninformative <- list(N = N, 
                                     K = K,
                                     L = L, 
@@ -163,14 +163,14 @@ ratios2 <- neff_ratio(fit2)
 print(ratios2)
 
 set.seed(1999)
-y_test <- generic_price_test$Y
+y_test <- exp(generic_price_test$Y)
 y_test_rep_noninformative <- extract(fit2)[["y_pred_test"]]
-samp100 <- sample(nrow(y_test_rep), 1000)
+samp100 <- sample(nrow(y_test_rep_noninformative), 1000)
 ppc_dens_overlay(y_test, y_test_rep_noninformative[samp100, ])  
 
 ppc_intervals(
   y = y_test,
-  yrep = y_test_rep,
+  yrep = y_test_rep_noninformative,
   x =  generic_price_test$competitor,
   prob = 0.95
 ) +
@@ -184,18 +184,28 @@ ppc_intervals(
 ppc_stat(y_test, y_test_rep, stat = 'median')
 ppc_stat(y_test, y_test_rep, stat = 'mean')
 
-quants <- c(0.025,0.975)
+quants <- c(0.025, 0.05, 0.975, 0.95)
+
 y_test_rep_noninformative_summary <- apply(y_test_rep_noninformative, 2 , quantile , probs = quants , na.rm = TRUE )
 
 y_test_pred_noninformative <- as.data.frame(t(y_test_rep_noninformative_summary))
 
-y_test_pred_noninformative <- cbind(y_test_pred_noninformative, generic_price_test$Y)
+y_test_pred_noninformative <- cbind(y_test_pred_noninformative, exp(generic_price_test$Y))
 
 y_test_pred_noninformative <- y_test_pred_noninformative %>%
-  rename(Y = `generic_price_test$Y`) %>%
-  mutate(CI_covered = ifelse(Y >= `2.5%` & Y <= `97.5%`, 1, 0))
+  rename(Y = `exp(generic_price_test$Y)`) %>%
+  mutate(CI_covered_95 = ifelse(Y >= `2.5%` & Y <= `97.5%`, 1, 0),
+         CI_covered_90 = ifelse(Y >= `5%` & Y <= `95%`, 1, 0))
 
-mean(y_test_pred_noninformative$CI_covered)
+mean(y_test_pred_noninformative$CI_covered_95)
+mean(y_test_pred_noninformative$CI_covered_90)
+
+MSE_test_noninformative <- 0
+for (i in 1:N_test){
+  MSE_test_noninformative = MSE_test_noninformative + (mean(y_test_rep_noninformative[,i]) - exp(generic_price_test$Y[i]))^2
+}
+MSE_test_noninformative <- MSE_test_noninformative/N_test
+
 
 stan.dat_generic_price_test_informative <- list(N = N, 
                                                    K = K,
@@ -233,18 +243,27 @@ y_test_rep_informative <- extract(fit3)[["y_pred_test"]]
 samp100 <- sample(nrow(y_test_rep_informative), 1000)
 ppc_dens_overlay(y_test, y_test_rep_informative[samp100, ])  
 
-quants <- c(0.025,0.975)
+quants <- c(0.025, 0.05, 0.975, 0.95)
 y_test_rep_informative_summary <- apply(y_test_rep_informative, 2 , quantile , probs = quants , na.rm = TRUE )
 
 y_test_pred_informative <- as.data.frame(t(y_test_rep_informative_summary))
 
-y_test_pred_informative <- cbind(y_test_pred_informative, generic_price_test$Y)
+y_test_pred_informative <- cbind(y_test_pred_informative, exp(generic_price_test$Y))
 
 y_test_pred_informative <- y_test_pred_informative %>%
-  rename(Y = `generic_price_test$Y`) %>%
-  mutate(CI_covered = ifelse(Y >= `2.5%` & Y <= `97.5%`, 1, 0))
+  rename(Y = `exp(generic_price_test$Y)`) %>%
+  mutate(CI_covered_95 = ifelse(Y >= `2.5%` & Y <= `97.5%`, 1, 0),
+         CI_covered_90 = ifelse(Y >= `5%` & Y <= `95%`, 1, 0))
 
-mean(y_test_pred_informative$CI_covered)
+mean(y_test_pred_informative$CI_covered_95)
+mean(y_test_pred_informative$CI_covered_90)
+
+MSE_test_informative <- 0
+for (i in 1:N_test){
+  MSE_test_informative = MSE_test_informative + (mean(y_test_rep_informative[,i]) - exp(generic_price_test$Y[i]))^2
+}
+MSE_test_informative <- MSE_test_informative/N_test
+
 
 ppc_intervals(
   y = y_test,
