@@ -7,6 +7,8 @@ load("MEPS_summary_weighted.Rdata")
 
 save(MEPS_summary_weighted, file = "MEPS_summary_weighted.Rdata")
 
+test <- model.matrix(Y ~ competitor + P_b_prior_LOE + t_LOE + as.factor(ll), data = generic_price_train)
+
 ##1. Generic price 
 #log(generic price) ~ N 
 

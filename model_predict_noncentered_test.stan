@@ -29,6 +29,7 @@ transformed parameters {
 
   for (l in 1:L)
     beta[l] = mu + alpha[l].*omega;
+    //equivalent to beta[l] ~ normal(mu, omega); just makes sampling easier
     
   for (l in 1:L_test)
     beta_pred[l] = mu + alpha_pred[l].*omega;

@@ -43,8 +43,8 @@ NDC_df %>%
 MEPS_NDC <- function(MEPS){
   data <- MEPS %>%
     filter(!is.na(RXNDC9)) %>%
-    select(RXNDC9) %>%
-    distinct(RXNDC9)
+    select(RXNDC9, RXNAME) %>%
+    distinct(RXNDC9, RXNAME)
   return(data)
 }
 
@@ -73,11 +73,43 @@ MEPS_all_NDC <- MEPS2006_NDC %>%
   bind_rows(MEPS2015_NDC) %>%
   bind_rows(MEPS2016_NDC) %>%
   bind_rows(MEPS2017_NDC) %>%
-  distinct(RXNDC9)
+  distinct(RXNDC9, RXNAME)
 
 NDC_df_MEPS <- NDC_df %>%
   inner_join(MEPS_all_NDC, by = c("NDC" = "RXNDC9"))
 
 NDC_df_MEPS %>%
   distinct(index) %>%
+  count()
+
+NDC_df_MEPS %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_MEPS_NDC_antijoin <- MEPS_all_NDC %>%
+  anti_join(NDC_df, by = c("RXNDC9" = "NDC"))
+
+MEPS_MEPS_NDC_antijoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_MEPS_NDC_innerjoin <- MEPS_all_NDC %>%
+  left_join(NDC_df, by = c("RXNDC9" = "NDC"))
+
+MEPS_MEPS_NDC_innerjoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_antijoin <- MEPS_all_NDC %>%
+  anti_join(NDC, by = c("RXNDC9" = "NDC"))
+
+MEPS_NDC_antijoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_innerjoin <- MEPS_all_NDC %>%
+  left_join(NDC, by = c("RXNDC9" = "NDC"))
+
+MEPS_NDC_innerjoin %>%
+  distinct(RXNAME) %>%
   count()

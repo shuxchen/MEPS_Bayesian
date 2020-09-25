@@ -12,7 +12,7 @@ library(ggplot2)
 library(bayesplot)
 library("rstan")
 #install.packages("bridgesampling")
-library(bridgesampling)
+#library(bridgesampling)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 library("loo")
@@ -22,4 +22,11 @@ library(lmtest)
 library(gee)
 #install.packages("margins")
 library(margins)
+#install.packages("brms")
+if (!requireNamespace("remotes")) {
+  install.packages("remotes")
+}
+remotes::install_github("paul-buerkner/brms")
+
+library(brms)
 
