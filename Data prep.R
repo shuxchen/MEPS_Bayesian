@@ -67,6 +67,8 @@ NDC_noPIV_multiple_strengths %>%
 NDC_noPIV <- NDC_noPIV_one_strength %>%
   bind_rows(NDC_noPIV_multiple_strengths)
 
+save(NDC_noPIV, file = "NDC_noPIV.Rdata")
+
 #2. PIV
 genericPIV_id <- genericPIV %>% 
   distinct(index)
@@ -120,6 +122,8 @@ NDC_PIV_multiple_strengths %>%
 
 NDC_PIV <- NDC_PIV_one_strength %>%
   bind_rows(NDC_PIV_multiple_strengths)
+
+save(NDC_PIV, file = "NDC_PIV.Rdata")
 
 #check NDC code format
 test <- NDC_noPIV[, c("Appl_No", "PRODUCTNDC", "NDC")] 
@@ -201,6 +205,8 @@ index_included <- NDC_generic %>%
 
 index <- index_included$index
 
+genericnoPIV_included$approveyear <- as.numeric(genericnoPIV_included$approveyear)
+ 
 generic_included <- genericPIV_included %>%
   rbind(genericnoPIV_included) %>%
   inner_join(index_included)
@@ -244,7 +250,8 @@ MEPS <- map_dfr(index, function(id){
 ####################################################################################
 MEPS2006 <- read_excel("MEPS/2006/H102A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2006$RXNDC9 <- str_sub(MEPS2006$`NATIONAL DRUG CODE (IMPUTED)`, -11, -3)
+#MEPS2006$RXNDC9 <- str_sub(MEPS2006$`NATIONAL DRUG CODE (IMPUTED)`, -11, -3)
+MEPS2006$RXNDC9 <- MEPS2006$`NATIONAL DRUG CODE (IMPUTED)`
 #Exclude "()" in names
 MEPS2006$RXNAME <- sapply(strsplit(MEPS2006$`MEDICATION NAME (IMPUTED)`, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -270,7 +277,9 @@ MEPS2006 %>%
 ####################################################################################
 MEPS2007 <- read_excel("MEPS/2007/H110A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2007$RXNDC9 <- str_sub(MEPS2007$RXNDC, -11, -3)
+#MEPS2007$RXNDC9 <- str_sub(MEPS2007$RXNDC, -11, -3)
+MEPS2007$RXNDC9 <- MEPS2007$RXNDC
+
 #Exclude "()" in names
 MEPS2007$RXNAME <- sapply(strsplit(MEPS2007$RXNAME, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -301,12 +310,16 @@ test_design <- svydesign(id       = ~ VARPSU,
                              data    = test)
 
 svymean(~ RXQUANTY, test_design, na.rm = TRUE)
+
+
 ####################################################################################
 ##Load MEPS 2008 data
 ####################################################################################
 MEPS2008 <- read_excel("MEPS/2008/H118A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2008$RXNDC9 <- str_sub(MEPS2008$RXNDC, -11, -3)
+#MEPS2008$RXNDC9 <- str_sub(MEPS2008$RXNDC, -11, -3)
+MEPS2008$RXNDC9 <- MEPS2008$RXNDC
+
 #Exclude "()" in names
 MEPS2008$RXNAME <- sapply(strsplit(MEPS2008$RXNAME, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -324,7 +337,9 @@ MEPS2008 <- MEPS2008 %>%
 ####################################################################################
 MEPS2009 <- read_excel("MEPS/2009/H126A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2009$RXNDC9 <- str_sub(MEPS2009$RXNDC, -11, -3)
+#MEPS2009$RXNDC9 <- str_sub(MEPS2009$RXNDC, -11, -3)
+MEPS2009$RXNDC9 <- MEPS2009$RXNDC
+
 #Exclude "()" in names
 MEPS2009$RXNAME <- sapply(strsplit(MEPS2009$RXNAME, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -342,7 +357,9 @@ MEPS2009 <- MEPS2009 %>%
 ####################################################################################
 MEPS2010 <- read_excel("MEPS/2010/H135A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2010$RXNDC9 <- str_sub(MEPS2010$RXNDC, -11, -3)
+#MEPS2010$RXNDC9 <- str_sub(MEPS2010$RXNDC, -11, -3)
+MEPS2010$RXNDC9 <- MEPS2010$RXNDC
+
 #Exclude "()" in names
 MEPS2010$RXNAME <- sapply(strsplit(MEPS2010$RXNAME, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -360,7 +377,9 @@ MEPS2010 <- MEPS2010 %>%
 ####################################################################################
 MEPS2011 <- read_excel("MEPS/2011/H144A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2011$RXNDC9 <- str_sub(MEPS2011$RXNDC, -11, -3)
+#MEPS2011$RXNDC9 <- str_sub(MEPS2011$RXNDC, -11, -3)
+MEPS2011$RXNDC9 <- MEPS2011$RXNDC
+
 #Exclude "()" in names
 MEPS2011$RXNAME <- sapply(strsplit(MEPS2011$RXNAME, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -378,7 +397,9 @@ MEPS2011 <- MEPS2011 %>%
 ####################################################################################
 MEPS2012 <- read_excel("MEPS/2012/H152A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2012$RXNDC9 <- str_sub(MEPS2012$RXNDC, -11, -3)
+#MEPS2012$RXNDC9 <- str_sub(MEPS2012$RXNDC, -11, -3)
+MEPS2012$RXNDC9 <- MEPS2012$RXNDC
+
 #Exclude "()" in names
 MEPS2012$RXNAME <- sapply(strsplit(MEPS2012$RXNAME, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -396,7 +417,9 @@ MEPS2012 <- MEPS2012 %>%
 ####################################################################################
 MEPS2013 <- read_excel("MEPS/2013/H160A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2013$RXNDC9 <- str_sub(MEPS2013$RXNDC, -11, -3)
+#MEPS2013$RXNDC9 <- str_sub(MEPS2013$RXNDC, -11, -3)
+MEPS2013$RXNDC9 <- MEPS2013$RXNDC
+
 #Exclude "()" in names
 MEPS2013$RXNAME <- sapply(strsplit(MEPS2013$RXNAME, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -414,7 +437,9 @@ MEPS2013 <- MEPS2013 %>%
 ####################################################################################
 MEPS2014 <- read_excel("MEPS/2014/H168A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2014$RXNDC9 <- str_sub(MEPS2014$RXNDC, -11, -3)
+#MEPS2014$RXNDC9 <- str_sub(MEPS2014$RXNDC, -11, -3)
+MEPS2014$RXNDC9 <- MEPS2014$RXNDC
+
 #Exclude "()" in names
 MEPS2014$RXNAME <- sapply(strsplit(MEPS2014$RXNAME, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -432,7 +457,9 @@ MEPS2014 <- MEPS2014 %>%
 ####################################################################################
 MEPS2015 <- read_excel("MEPS/2015/H178A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2015$RXNDC9 <- str_sub(MEPS2015$RXNDC, -11, -3)
+#MEPS2015$RXNDC9 <- str_sub(MEPS2015$RXNDC, -11, -3)
+MEPS2015$RXNDC9 <- MEPS2015$RXNDC
+
 #Exclude "()" in names
 MEPS2015$RXNAME <- sapply(strsplit(MEPS2015$RXNAME, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -450,7 +477,9 @@ MEPS2015 <- MEPS2015 %>%
 ####################################################################################
 MEPS2016 <- read_excel("MEPS/2016/H188A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2016$RXNDC9 <- str_sub(MEPS2016$`NDC (IMPUTED)`, -11, -3)
+#MEPS2016$RXNDC9 <- str_sub(MEPS2016$`NDC (IMPUTED)`, -11, -3)
+MEPS2016$RXNDC9 <- MEPS2016$`NDC (IMPUTED)`
+
 #Exclude "()" in names
 MEPS2016$RXNAME <- sapply(strsplit(MEPS2016$`MEDICINE NAME (IMPUTED)`, split=' (', fixed=TRUE), function(x) (x[1]))
 
@@ -468,7 +497,9 @@ MEPS2016 <- MEPS2016 %>%
 ####################################################################################
 MEPS2017 <- read_excel("MEPS/2017/H197A.xlsx")
 #Create NDC code (9-digit, product NDC)
-MEPS2017$RXNDC9 <- str_sub(MEPS2017$`NDC (IMPUTED)`, -11, -3)
+#MEPS2017$RXNDC9 <- str_sub(MEPS2017$`NDC (IMPUTED)`, -11, -3)
+MEPS2017$RXNDC9 <- MEPS2017$`NDC (IMPUTED)`
+
 #Exclude "()" in names
 MEPS2017$RXNAME <- sapply(strsplit(MEPS2017$`MEDICINE NAME (IMPUTED)`, split=' (', fixed=TRUE), function(x) (x[1]))
 

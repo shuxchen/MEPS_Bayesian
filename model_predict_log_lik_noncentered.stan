@@ -28,6 +28,8 @@ transformed parameters {
 
   for (l in 1:L)
     beta[l] = mu + omega*alpha;
+    //beta1_group1 = mu1 +..
+    //beta2_group1 = mu2
     
   for (l in 1:L_test)
     beta_pred[l] = mu + omega*alpha_pred;

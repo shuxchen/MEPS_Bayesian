@@ -113,3 +113,5 @@ MEPS_NDC_innerjoin <- MEPS_all_NDC %>%
 MEPS_NDC_innerjoin %>%
   distinct(RXNAME) %>%
   count()
+
+
