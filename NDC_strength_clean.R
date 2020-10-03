@@ -1,6 +1,11 @@
 #load NDC data
 NDC <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/product.xlsx")
 
+NDC_package <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/package.xlsx")
+NDC_package <- NDC_package[, c(1, 3)]
+NDC <- merge(NDC, NDC_package, by=c("PRODUCTID"), all.x=T)
+NDC <- NDC[!duplicated(NDC),]
+
 #change Application number to number only (string)
 NDC$Appl_No <- sapply(strsplit(NDC$APPLICATIONNUMBER, split='NDA', fixed=TRUE), function(x) (x[2]))
 
@@ -9,8 +14,16 @@ NDC$Appl_No <- sapply(strsplit(NDC$APPLICATIONNUMBER, split='NDA', fixed=TRUE), 
 # 99999-0999 if 99999-999
 # 99999-9999
 
-NDC$NDC <- ifelse(nchar(NDC$PRODUCTNDC)==10, NDC$PRODUCTNDC, 
-                  ifelse(str_sub(NDC$PRODUCTNDC, -4, -4) == "-", sub( '(?<=.{6})', '0', NDC$PRODUCTNDC, perl=TRUE ), sub( '(?<=.{1})', '0', NDC$PRODUCTNDC, perl=TRUE)))
+#NDC$NDC <- ifelse(nchar(NDC$PRODUCTNDC)==10, NDC$PRODUCTNDC, 
+#                  ifelse(str_sub(NDC$PRODUCTNDC, -4, -4) == "-", sub( '(?<=.{6})', '0', NDC$PRODUCTNDC, perl=TRUE ), sub( '(?<=.{1})', '0', NDC$PRODUCTNDC, perl=TRUE)))
+
+#make NDC code into the same format as in MEPS (11 digits)
+# 09999-9999-99 if 9999-9999-99
+# 99999-0999-99 if 99999-999-99 
+# 99999-9999-09 if 99999-9999-9
+
+NDC$NDC <- ifelse(str_sub(NDC$NDCPACKAGECODE, 5, 5) == "-", paste0("0", NDC$NDCPACKAGECODE), ifelse(str_sub(NDC$NDCPACKAGECODE, 10, 10) == "-", sub( '(?<=.{6})', '0', NDC$NDCPACKAGECODE, perl = T), sub( '(?<=.{11})', '0', NDC$NDCPACKAGECODE, perl = T)))
+
 #Get rid of "-"
 NDC$NDC <- gsub("-", "", NDC$NDC)
 
