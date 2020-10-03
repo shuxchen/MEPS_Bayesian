@@ -1,4 +1,3 @@
-library(dplyr)
 library(tidyr)
 library(readxl)
 library(stringr)
@@ -23,10 +22,13 @@ library(gee)
 #install.packages("margins")
 library(margins)
 #install.packages("brms")
-if (!requireNamespace("remotes")) {
-  install.packages("remotes")
-}
-remotes::install_github("paul-buerkner/brms")
+#remotes::install_github("stan-dev/rstantools")
+#library(rstantools)
+#if (!requireNamespace("remotes")) {
+#  install.packages("remotes")
+#}
+#remotes::install_github("paul-buerkner/brms")
 
 library(brms)
+library(dplyr)
 
