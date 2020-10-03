@@ -1,7 +1,13 @@
-setwd("~/Dropbox/Advanced Method Project/Data")
-source("Aim1/MEPS_Bayesian/load_packages.R")
-source("Aim1/MEPS_Bayesian/NDC_strength_clean.R")
-
+if (.Platform$OS.type == "unix"){
+  setwd("~/Dropbox/Advanced Method Project/Data")
+  source("Aim1/MEPS_Bayesian/load_packages.R")
+  source("Aim1/MEPS_Bayesian/NDC_strength_clean.R")
+  
+} else {
+  setwd("C:\\Users\\shuxian\\repos\\MEPS_Bayesian")
+  source("load_packages.R")
+  source("NDC_strength_clean.R")
+}
 
 load("all.RData")
 load("genericPIV.RData")
