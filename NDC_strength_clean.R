@@ -1,10 +1,27 @@
 #load NDC data
 NDC <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/product.xlsx")
-
 NDC_package <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/package.xlsx")
 NDC_package <- NDC_package[, c(1, 3)]
 NDC <- merge(NDC, NDC_package, by=c("PRODUCTID"), all.x=T)
 NDC <- NDC[!duplicated(NDC),]
+
+NDC_unfinished <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/ndc_unfinished/unfinished_product.xlsx")
+NDC_unfinished_package <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/ndc_unfinished/unfinished_package.xlsx")
+NDC_unfinished_package <- NDC_unfinished_package[, c(1, 3)]
+NDC_unfinished <- merge(NDC_unfinished, NDC_unfinished_package, by=c("PRODUCTID"), all.x=T)
+NDC_unfinished <- NDC_unfinished[!duplicated(NDC_unfinished),]
+
+NDC_unfinished_excluded <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/ndc_unfinished_excluded/unfinished_products_excluded.xlsx")
+NDC_unfinished_package_excluded <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/ndc_unfinished_excluded/unfinished_packages_excluded.xlsx")
+NDC_unfinished_package_excluded <- NDC_unfinished_package_excluded[, c(1, 3)]
+NDC_unfinished_excluded <- merge(NDC_unfinished_excluded, NDC_unfinished_package_excluded, by=c("PRODUCTID"), all.x=T)
+NDC_unfinished_excluded <- NDC_unfinished_excluded[!duplicated(NDC_unfinished_excluded),]
+
+#NDC <- NDC %>%
+#  dplyr::select(1:4, DOSAGEFORMNAME, STARTMARKETINGDATE, MARKETINGCATEGORYNAME, LABELERNAME, SUBSTANCENAME, ACTIVE_NUMERATOR_STRENGTH, ACTIVE_INGRED_UNIT, NDCPACKAGECODE, APPLICATIONNUMBER)
+
+NDC_unfinished <- NDC_unfinished %>%
+  dplyr::select(1:4, DOSAGEFORMNAME, STARTMARKETINGDATE, MARKETINGCATEGORYNAME, LABELERNAME, SUBSTANCENAME, ACTIVE_NUMERATOR_STRENGTH, ACTIVE_INGRED_UNIT, NDCPACKAGECODE)
 
 #change Application number to number only (string)
 NDC$Appl_No <- sapply(strsplit(NDC$APPLICATIONNUMBER, split='NDA', fixed=TRUE), function(x) (x[2]))

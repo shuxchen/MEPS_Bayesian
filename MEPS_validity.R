@@ -1,4 +1,4 @@
-
+load("NDC.Rdata")
 # 1. OB count
 df %>%
   distinct(index) %>%
@@ -40,26 +40,27 @@ NDC_df %>%
   count()
 
 # 3. NDC to MEPS count
-MEPS_NDC <- function(MEPS){
+MEPS_NDC <- function(MEPS, time){
   data <- MEPS %>%
     filter(!is.na(RXNDC9)) %>%
     select(RXNDC9, RXNAME) %>%
-    distinct(RXNDC9, RXNAME)
+    distinct(RXNDC9, RXNAME) %>%
+    mutate(year = time)
   return(data)
 }
 
-MEPS2006_NDC <- MEPS_NDC(MEPS2006)
-MEPS2007_NDC <- MEPS_NDC(MEPS2007)
-MEPS2008_NDC <- MEPS_NDC(MEPS2008)
-MEPS2009_NDC <- MEPS_NDC(MEPS2009)
-MEPS2010_NDC <- MEPS_NDC(MEPS2010)
-MEPS2011_NDC <- MEPS_NDC(MEPS2011)
-MEPS2012_NDC <- MEPS_NDC(MEPS2012)
-MEPS2013_NDC <- MEPS_NDC(MEPS2013)
-MEPS2014_NDC <- MEPS_NDC(MEPS2014)
-MEPS2015_NDC <- MEPS_NDC(MEPS2015)
-MEPS2016_NDC <- MEPS_NDC(MEPS2016)
-MEPS2017_NDC <- MEPS_NDC(MEPS2017)
+MEPS2006_NDC <- MEPS_NDC(MEPS2006, "2006")
+MEPS2007_NDC <- MEPS_NDC(MEPS2007, "2007")
+MEPS2008_NDC <- MEPS_NDC(MEPS2008, "2008")
+MEPS2009_NDC <- MEPS_NDC(MEPS2009, "2009")
+MEPS2010_NDC <- MEPS_NDC(MEPS2010, "2010")
+MEPS2011_NDC <- MEPS_NDC(MEPS2011, "2011")
+MEPS2012_NDC <- MEPS_NDC(MEPS2012, "2012")
+MEPS2013_NDC <- MEPS_NDC(MEPS2013, "2013")
+MEPS2014_NDC <- MEPS_NDC(MEPS2014, "2014")
+MEPS2015_NDC <- MEPS_NDC(MEPS2015, "2015")
+MEPS2016_NDC <- MEPS_NDC(MEPS2016, "2016")
+MEPS2017_NDC <- MEPS_NDC(MEPS2017, "2017")
 
 MEPS_all_NDC <- MEPS2006_NDC %>%
   bind_rows(MEPS2007_NDC) %>%
@@ -73,7 +74,7 @@ MEPS_all_NDC <- MEPS2006_NDC %>%
   bind_rows(MEPS2015_NDC) %>%
   bind_rows(MEPS2016_NDC) %>%
   bind_rows(MEPS2017_NDC) %>%
-  distinct(RXNDC9, RXNAME)
+  distinct(RXNDC9, RXNAME, year)
   
 NDC_df_MEPS <- NDC_df %>%
   inner_join(MEPS_all_NDC, by = c("NDC" = "RXNDC9"))
@@ -94,7 +95,7 @@ MEPS_MEPS_NDC_antijoin %>%
   count()
 
 MEPS_MEPS_NDC_innerjoin <- MEPS_all_NDC %>%
-  left_join(NDC_df, by = c("RXNDC9" = "NDC"))
+  inner_join(NDC_df, by = c("RXNDC9" = "NDC"))
 
 MEPS_MEPS_NDC_innerjoin %>%
   distinct(RXNAME) %>%
@@ -107,11 +108,119 @@ MEPS_NDC_antijoin %>%
   distinct(RXNAME) %>%
   count()
 
+MEPS_NDC_notmatched <- MEPS_NDC_antijoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
 MEPS_NDC_innerjoin <- MEPS_all_NDC %>%
-  left_join(NDC, by = c("RXNDC9" = "NDC"))
+  inner_join(NDC, by = c("RXNDC9" = "NDC"))
 
 MEPS_NDC_innerjoin %>%
   distinct(RXNAME) %>%
   count()
 
+MEPS_NDC_matched <- MEPS_NDC_innerjoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_matched <- MEPS_NDC_matched %>%
+  rename(n_match = n) %>%
+  left_join(MEPS_NDC_notmatched, by = "year") %>%
+  mutate(p = n_match / (n + n_match))
+
+## use 9 digits only
+MEPS_all_NDC$RXNDC11 <- MEPS_all_NDC$RXNDC9
+MEPS_all_NDC$RXNDC9 <- str_sub(MEPS_all_NDC$RXNDC11, -11, -3)
+
+NDC_df$NDC9 <- str_sub(NDC_df$NDC, -11, -3)
+NDC$NDC9 <- str_sub(NDC$NDC, -11, -3)
+
+MEPS_NDC_antijoin <- MEPS_all_NDC %>%
+  anti_join(NDC, by = c("RXNDC9" = "NDC9"))
+
+MEPS_NDC_antijoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_notmatched <- MEPS_NDC_antijoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+
+MEPS_NDC_innerjoin <- MEPS_all_NDC %>%
+  inner_join(NDC, by = c("RXNDC9" = "NDC9"))
+
+MEPS_NDC_innerjoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_matched <- MEPS_NDC_innerjoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_matched <- MEPS_NDC_matched %>%
+  rename(n_match = n) %>%
+  left_join(MEPS_NDC_notmatched, by = "year") %>%
+  mutate(p = n_match / (n + n_match))
+
+## use NDC and NDC_unfinished
+NDC_code <- NDC %>%
+  dplyr::select(NDC)
+
+NDC_unfinished_code <- NDC_unfinished %>%
+  dplyr::select(NDCPACKAGECODE)
+
+NDC_unfinished_code$NDC <- ifelse(str_sub(NDC_unfinished_code$NDCPACKAGECODE, 5, 5) == "-", paste0("0", NDC_unfinished_code$NDCPACKAGECODE), ifelse(str_sub(NDC_unfinished_code$NDCPACKAGECODE, 10, 10) == "-", sub( '(?<=.{6})', '0', NDC_unfinished_code$NDCPACKAGECODE, perl = T), sub( '(?<=.{11})', '0', NDC_unfinished_code$NDCPACKAGECODE, perl = T)))
+NDC_unfinished_code$NDC <- gsub("-", "", NDC_unfinished_code$NDC)
+
+NDC_unfinished_code <- NDC_unfinished_code %>%
+  dplyr::select(NDC)
+
+NDC_unfinished_excluded_code <- NDC_unfinished_excluded %>%
+  dplyr::select(NDCPACKAGECODE)
+
+NDC_unfinished_excluded_code$NDC <- ifelse(str_sub(NDC_unfinished_excluded_code$NDCPACKAGECODE, 5, 5) == "-", paste0("0", NDC_unfinished_excluded_code$NDCPACKAGECODE), ifelse(str_sub(NDC_unfinished_excluded_code$NDCPACKAGECODE, 10, 10) == "-", sub( '(?<=.{6})', '0', NDC_unfinished_excluded_code$NDCPACKAGECODE, perl = T), sub( '(?<=.{11})', '0', NDC_unfinished_excluded_code$NDCPACKAGECODE, perl = T)))
+NDC_unfinished_excluded_code$NDC <- gsub("-", "", NDC_unfinished_excluded_code$NDC)
+
+NDC_unfinished_excluded_code <- NDC_unfinished_excluded_code %>%
+  dplyr::select(NDC)
+
+NDC_code_all <- NDC_code %>%
+  bind_rows(NDC_unfinished_code) %>%
+  bind_rows(NDC_unfinished_excluded_code) %>%
+  distinct(NDC)
+  
+MEPS_NDC_all_antijoin <- MEPS_all_NDC %>%
+  anti_join(NDC_code_all, by = c("RXNDC11" = "NDC"))
+
+MEPS_NDC_all_antijoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_all_notmatched <- MEPS_NDC_all_antijoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+
+MEPS_NDC_all_innerjoin <- MEPS_all_NDC %>%
+  inner_join(NDC_code_all, by = c("RXNDC11" = "NDC"))
+
+MEPS_NDC_all_innerjoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_all_matched <- MEPS_NDC_all_innerjoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_all_matched <- MEPS_NDC_all_matched %>%
+  rename(n_match = n) %>%
+  left_join(MEPS_NDC_all_notmatched, by = "year") %>%
+  mutate(p = n_match / (n + n_match))
 
