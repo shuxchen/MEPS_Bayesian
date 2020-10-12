@@ -270,13 +270,13 @@ temp1$ACTIVE_NUMERATOR_STRENGTH<-formatC(temp1$ACTIVE_NUMERATOR_STRENGTH, drop0t
 temp1$ACTIVE_NUMERATOR_STRENGTH[ (temp1$Appl_No==010379 |temp1$Appl_No== 020746 | temp1$Appl_No==020393 | temp1$Appl_No==019389 | temp1$Appl_No==022051 | temp1$Appl_No==021433 | temp1$Appl_No==022051 | temp1$Appl_No==090097 | temp1$Appl_No==078949 | temp1$Appl_No==076187 | temp1$Appl_No==090326 | temp1$Appl_No==021730 | temp1$Appl_No==020393 | temp1$Appl_No==021395 | temp1$Appl_No==020394 | temp1$Appl_No==021527 | temp1$Appl_No==203108 |temp1$Appl_No==021342 | temp1$Appl_No==078949 |temp1$Appl_No==021924 | temp1$Appl_No==076025 |temp1$Appl_No==076103 |temp1$Appl_No==090097 | temp1$Appl_No==021342 |temp1$Appl_No==078949 | temp1$Appl_No==076103 |temp1$Appl_No==200295 |temp1$Appl_No==090097 |temp1$Appl_No==202097 |temp1$Appl_No==021433 |temp1$Appl_No==090326 | temp1$Appl_No==020746 |temp1$Appl_No==076187 |temp1$Appl_No==021342 | temp1$Appl_No==200295 |temp1$Appl_No==090097 |temp1$Appl_No==020911 | temp1$Appl_No==076187 | temp1$Appl_No==010379 | temp1$Appl_No==076187 | temp1$Appl_No==021301 | temp1$Appl_No==020831 | temp1$Appl_No==076103 | temp1$Appl_No==010379 |temp1$Appl_No==021395 | temp1$Appl_No==021527 | temp1$Appl_No==020393 | temp1$Appl_No==021730 | temp1$Appl_No==076025 | temp1$Appl_No==020911 |temp1$Appl_No==021433 | temp1$Appl_No==022051 | temp1$Appl_No==076187 | temp1$Appl_No==021342 | temp1$Appl_No==200295 | temp1$Appl_No==020911 | temp1$Appl_No==202813 | temp1$Appl_No==207921 | temp1$Appl_No==010379 |temp1$Appl_No==021210 | temp1$Appl_No==090097 | temp1$Appl_No==021730 | temp1$Appl_No==202129 | temp1$Appl_No==200295 | temp1$Appl_No==200295 | temp1$Appl_No==021342 | temp1$Appl_No==090097 | temp1$Appl_No==021402 | temp1$Appl_No==021342 | temp1$Appl_No==021730 | temp1$Appl_No==021433 | temp1$Appl_No==208010 | temp1$Appl_No==202129 | temp1$Appl_No==200295 | temp1$Appl_No==200295) & temp1$ACTIVE_INGRED_UNIT=="MCG"] <- as.numeric(temp1$ACTIVE_NUMERATOR_STRENGTH)/1000
 temp1$ACTIVE_INGRED_UNIT[ (temp1$Appl_No==010379 |temp1$Appl_No== 020746 | temp1$Appl_No==020393 | temp1$Appl_No==019389 | temp1$Appl_No==022051 | temp1$Appl_No==021433 | temp1$Appl_No==022051 | temp1$Appl_No==090097 | temp1$Appl_No==078949 | temp1$Appl_No==076187 | temp1$Appl_No==090326 | temp1$Appl_No==021730 | temp1$Appl_No==020393 | temp1$Appl_No==021395 | temp1$Appl_No==020394 | temp1$Appl_No==021527 | temp1$Appl_No==203108 |temp1$Appl_No==021342 | temp1$Appl_No==078949 |temp1$Appl_No==021924 | temp1$Appl_No==076025 |temp1$Appl_No==076103 |temp1$Appl_No==090097 | temp1$Appl_No==021342 |temp1$Appl_No==078949 | temp1$Appl_No==076103 |temp1$Appl_No==200295 |temp1$Appl_No==090097 |temp1$Appl_No==202097 |temp1$Appl_No==021433 |temp1$Appl_No==090326 | temp1$Appl_No==020746 |temp1$Appl_No==076187 |temp1$Appl_No==021342 | temp1$Appl_No==200295 |temp1$Appl_No==090097 |temp1$Appl_No==020911 | temp1$Appl_No==076187 | temp1$Appl_No==010379 | temp1$Appl_No==076187 | temp1$Appl_No==021301 | temp1$Appl_No==020831 | temp1$Appl_No==076103 | temp1$Appl_No==010379 |temp1$Appl_No==021395 | temp1$Appl_No==021527 | temp1$Appl_No==020393 | temp1$Appl_No==021730 | temp1$Appl_No==076025 | temp1$Appl_No==020911 |temp1$Appl_No==021433 | temp1$Appl_No==022051 | temp1$Appl_No==076187 | temp1$Appl_No==021342 | temp1$Appl_No==200295 | temp1$Appl_No==020911 | temp1$Appl_No==202813 | temp1$Appl_No==207921 | temp1$Appl_No==010379 |temp1$Appl_No==021210 | temp1$Appl_No==090097 | temp1$Appl_No==021730 | temp1$Appl_No==202129 | temp1$Appl_No==200295 | temp1$Appl_No==200295 | temp1$Appl_No==021342 | temp1$Appl_No==090097 | temp1$Appl_No==021402 | temp1$Appl_No==021342 | temp1$Appl_No==021730 | temp1$Appl_No==021433 | temp1$Appl_No==208010 | temp1$Appl_No==202129 | temp1$Appl_No==200295 | temp1$Appl_No==200295) & temp1$ACTIVE_INGRED_UNIT=="MCG"] <- "MG"
 temp1<-transform(temp1, Strength1=paste(ACTIVE_NUMERATOR_STRENGTH, ACTIVE_INGRED_UNIT, sep="")) 
-temp1<-temp1[c(1,25)]
+temp1<-temp1[c("PRODUCTID", "Strength1")]
 
 NDC<- merge(NDC,temp1, by=c("PRODUCTID"), all=TRUE)
-
 NDC$Strengthnew <- ifelse(!is.na(NDC$Strength1), as.character(NDC$Strength1), as.character(NDC$Strength))
-NDC<-NDC[, -c(24:25)]
-colnames(NDC)[24] <- "Strength"
+NDC <- NDC %>%
+  dplyr::select(-Strength, - Strength1) %>%
+  rename(Strength = Strengthnew)
 
 #c. multiple: [IU];[IU]
 NDC$Strength[NDC$PRODUCTNDC=="60793-600"] <- "300,000 UNITS/ML;300,000 UNITS/ML"
@@ -370,21 +370,24 @@ NDC$Strength[NDC$Appl_No=="020512"] <- "15% (15GM/100ML)"
 #need to merge doubleMG's strength info back in
 NDC<-merge(NDC, doubleMG, all=TRUE)
 NDC<-NDC%>%mutate(Strength = ifelse(is.na(Strength), Strength2, Strength))
-NDC<-NDC[, -c(25)]
+NDC<-NDC %>%
+  dplyr::select(-Strength2)
 #delete replicate
 NDC<-NDC[!duplicated(NDC[,c('PRODUCTNDC')]),]
 
 #need to merge tripleMG's strength info back in
 NDC<-merge(NDC, tripleMG, all=TRUE)
 NDC<-NDC%>%mutate(Strength = ifelse(is.na(Strength), Strength2, Strength))
-NDC<-NDC[, -c(25)]
+NDC<-NDC %>%
+  dplyr::select(-Strength2)
 #delete replicate
 NDC<-NDC[!duplicated(NDC[,c('PRODUCTNDC')]),]
 
 #need to merge quadMG's strength info back in
 NDC<-merge(NDC, quadMG, all=TRUE)
 NDC<-NDC%>%mutate(Strength = ifelse(is.na(Strength), Strength2, Strength))
-NDC<-NDC[, -c(25)]
+NDC<-NDC %>%
+  dplyr::select(-Strength2)
 #delete replicate
 NDC<-NDC[!duplicated(NDC[,c('PRODUCTNDC')]),]
 #modify some with different order
@@ -431,7 +434,8 @@ NDC$Strength[NDC$PRODUCTNDC=="68094-756"] <- "10MG/ML"
 #Multi "MG/5ML"
 NDC<-merge(NDC, multiMG5ML, all=TRUE)
 NDC<-NDC%>%mutate(Strength = ifelse(is.na(Strength), Strength2, Strength))
-NDC<-NDC[, -c(25)]
+NDC<-NDC %>%
+  dplyr::select(-Strength2)
 #delete replicate
 NDC<-NDC[!duplicated(NDC[,c('PRODUCTNDC')]),]
 
@@ -525,7 +529,8 @@ NDC$Strength[NDC$Appl_No=="087388"] <- "66%;10%"
 #need to merge MG/ML's strength info back in
 NDC<-merge(NDC, multiMGML, all=TRUE)
 NDC<-NDC%>%mutate(Strength = ifelse(is.na(Strength), Strength2, Strength))
-NDC<-NDC[, -c(25)]
+NDC<-NDC %>%
+  dplyr::select(-Strength2)
 #delete replicate
 NDC<-NDC[!duplicated(NDC[,c('PRODUCTNDC')]),]
 
