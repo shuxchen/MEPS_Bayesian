@@ -44,6 +44,12 @@ NDC$NDC <- ifelse(str_sub(NDC$NDCPACKAGECODE, 5, 5) == "-", paste0("0", NDC$NDCP
 #Get rid of "-"
 NDC$NDC <- gsub("-", "", NDC$NDC)
 
+NDC$NDC11 <- NDC$NDC
+NDC$NDC9 <- ifelse(str_sub(NDC$PRODUCTNDC, 5, 5) == "-", paste0("0", NDC$PRODUCTNDC), ifelse(nchar(NDC$PRODUCTNDC) == 9, sub( '(?<=.{6})', '0', NDC$PRODUCTNDC, perl = T), NDC$PRODUCTNDC))
+
+NDC$NDC9 <- gsub("-", "", NDC$NDC9)
+
+
 #Keep NDA, ANDA and Authorized Generics
 #Did not consider OTC MONOGRAPH FINAL
 NDC<-NDC[( NDC$MARKETINGCATEGORYNAME=="NDA" | NDC$MARKETINGCATEGORYNAME=="ANDA" | NDC$MARKETINGCATEGORYNAME=="NDA AUTHORIZED GENERIC"), ]
