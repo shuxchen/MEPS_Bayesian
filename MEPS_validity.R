@@ -43,13 +43,23 @@ NDC_df %>%
 MEPS_NDC <- function(MEPS, time){
   data <- MEPS %>%
     filter(!is.na(RXNDC9)) %>%
-    select(RXNDC9, RXNAME) %>%
-    distinct(RXNDC9, RXNAME) %>%
+    select(RXNDC9, RXNAME, RXFLG) %>%
+    distinct(RXNDC9, RXNAME, RXFLG) %>%
     mutate(year = time)
   return(data)
 }
 
-MEPS2006_NDC <- MEPS_NDC(MEPS2006, "2006")
+MEPS_NDC_new <- function(MEPS, time){
+  data <- MEPS %>%
+    filter(!is.na(RXNDC9)) %>%
+    select(RXNDC9, RXNAME, `NDC IMPUTATION SOURCE ON PC DONOR REC`) %>%
+    rename(RXFLG = `NDC IMPUTATION SOURCE ON PC DONOR REC`) %>%
+    distinct(RXNDC9, RXNAME, RXFLG) %>%
+    mutate(year = time) 
+  return(data)
+}
+
+MEPS2006_NDC <- MEPS_NDC_new(MEPS2006, "2006")
 MEPS2007_NDC <- MEPS_NDC(MEPS2007, "2007")
 MEPS2008_NDC <- MEPS_NDC(MEPS2008, "2008")
 MEPS2009_NDC <- MEPS_NDC(MEPS2009, "2009")
@@ -59,8 +69,8 @@ MEPS2012_NDC <- MEPS_NDC(MEPS2012, "2012")
 MEPS2013_NDC <- MEPS_NDC(MEPS2013, "2013")
 MEPS2014_NDC <- MEPS_NDC(MEPS2014, "2014")
 MEPS2015_NDC <- MEPS_NDC(MEPS2015, "2015")
-MEPS2016_NDC <- MEPS_NDC(MEPS2016, "2016")
-MEPS2017_NDC <- MEPS_NDC(MEPS2017, "2017")
+MEPS2016_NDC <- MEPS_NDC_new(MEPS2016, "2016")
+MEPS2017_NDC <- MEPS_NDC_new(MEPS2017, "2017")
 
 MEPS_all_NDC <- MEPS2006_NDC %>%
   bind_rows(MEPS2007_NDC) %>%
@@ -74,10 +84,18 @@ MEPS_all_NDC <- MEPS2006_NDC %>%
   bind_rows(MEPS2015_NDC) %>%
   bind_rows(MEPS2016_NDC) %>%
   bind_rows(MEPS2017_NDC) %>%
-  distinct(RXNDC9, RXNAME, year)
+  distinct(RXNDC9, RXNAME, RXFLG, year) %>%
+  mutate(imputed = ifelse(RXFLG == "1 NO IMPUTATION", 0, 1))
+
+n_imputed <- MEPS_all_NDC %>% 
+  group_by(imputed, year) %>%
+  count() %>%
+  group_by(year) %>%
+  mutate(percent = n/sum(n)) %>%
+  filter(imputed == 1)
   
 NDC_df_MEPS <- NDC_df %>%
-  inner_join(MEPS_all_NDC, by = c("NDC" = "RXNDC9"))
+  inner_join(MEPS_all_NDC, by = c("NDC9" = "RXNDC9"))
 
 NDC_df_MEPS %>%
   distinct(index) %>%
@@ -88,21 +106,21 @@ NDC_df_MEPS %>%
   count()
 
 MEPS_MEPS_NDC_antijoin <- MEPS_all_NDC %>%
-  anti_join(NDC_df, by = c("RXNDC9" = "NDC"))
+  anti_join(NDC_df, by = c("RXNDC9" = "NDC9"))
 
 MEPS_MEPS_NDC_antijoin %>%
   distinct(RXNAME) %>%
   count()
 
 MEPS_MEPS_NDC_innerjoin <- MEPS_all_NDC %>%
-  inner_join(NDC_df, by = c("RXNDC9" = "NDC"))
+  inner_join(NDC_df, by = c("RXNDC9" = "NDC9"))
 
 MEPS_MEPS_NDC_innerjoin %>%
   distinct(RXNAME) %>%
   count()
 
 MEPS_NDC_antijoin <- MEPS_all_NDC %>%
-  anti_join(NDC, by = c("RXNDC9" = "NDC"))
+  anti_join(NDC, by = c("RXNDC9" = "NDC9"))
 
 MEPS_NDC_antijoin %>%
   distinct(RXNAME) %>%
@@ -114,7 +132,7 @@ MEPS_NDC_notmatched <- MEPS_NDC_antijoin %>%
   count()
 
 MEPS_NDC_innerjoin <- MEPS_all_NDC %>%
-  inner_join(NDC, by = c("RXNDC9" = "NDC"))
+  inner_join(NDC, by = c("RXNDC9" = "NDC9"))
 
 MEPS_NDC_innerjoin %>%
   distinct(RXNAME) %>%
@@ -129,6 +147,23 @@ MEPS_NDC_matched <- MEPS_NDC_matched %>%
   rename(n_match = n) %>%
   left_join(MEPS_NDC_notmatched, by = "year") %>%
   mutate(p = n_match / (n + n_match))
+
+#consider whether imputed ones have worse quality
+MEPS_NDC_notmatched_imputed <- MEPS_NDC_antijoin %>%
+  group_by(year, imputed) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_matched_imputed <- MEPS_NDC_innerjoin %>%
+  group_by(year, imputed) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_matched_imputed <- MEPS_NDC_matched_imputed %>%
+  rename(n_match = n) %>%
+  left_join(MEPS_NDC_notmatched_imputed, on = c("year", "imputed")) %>%
+  mutate(p = n_match / (n + n_match))
+
 
 ## use 9 digits only
 MEPS_all_NDC$RXNDC11 <- MEPS_all_NDC$RXNDC9
