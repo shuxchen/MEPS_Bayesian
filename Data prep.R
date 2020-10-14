@@ -84,7 +84,12 @@ genericPIV_id <- genericPIV %>%
 
 index_time_PIV <- genericPIV %>%
   group_by(index) %>%
-  summarize(index_time = min(date, na.rm = TRUE)) 
+  summarize(index_time = min(date, na.rm = TRUE))
+
+index_time_PIV <- genericPIV %>%
+  group_by(index) %>%
+  summarize(index_time = min(date, na.rm = TRUE))
+
 
 genericPIV_included <- genericPIV %>%
   inner_join(genericPIV_id) %>%
