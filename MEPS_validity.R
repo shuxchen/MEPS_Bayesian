@@ -259,3 +259,7 @@ MEPS_NDC_all_matched <- MEPS_NDC_all_matched %>%
   left_join(MEPS_NDC_all_notmatched, by = "year") %>%
   mutate(p = n_match / (n + n_match))
 
+
+MEPS2017 %>%
+  dplyr::select(`MEDICINE NAME (IMPUTED)`, RXNDC11, `QUANTITY OF RX/PRESCR MED (IMPUTED)`, price_total) %>%
+  head(5)

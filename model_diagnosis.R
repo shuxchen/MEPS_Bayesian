@@ -1,4 +1,11 @@
-setwd("C:/Users/shuxian/repos/MEPS_Bayesian")
+if (.Platform$OS.type == "unix"){
+  setwd("~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian")
+  source("Aim1/MEPS_Bayesian/load_packages.R")
+
+} else {
+  setwd("C:\\Users\\shuxian\\repos\\MEPS_Bayesian")
+  source("load_packages.R")
+}
 
 load("generic_price_train.Rdata")
 load("generic_price_test.Rdata")

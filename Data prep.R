@@ -35,7 +35,7 @@ genericnoPIV_included <- genericnoPIV %>%
   inner_join(genericnoPIV_id) %>%
   left_join(index_time_noPIV) %>%
   mutate(year_LOE = year(index_time)) %>%
-  select(index, Appl_No, Product_No, Strength, Appl_Type, approveyear, Approval_Date, year_LOE) 
+  select(index, Appl_No, Product_No, Strength, Appl_Type, approveyear, Approval_Date, year_LOE, Trade_Name) 
 
 # get index for molecules without multiple strengths  
 genericnoPIV_Appl_No <- genericnoPIV_included %>%
@@ -95,7 +95,7 @@ genericPIV_included <- genericPIV %>%
   inner_join(genericPIV_id) %>%
   left_join(index_time_PIV) %>%
   mutate(year_LOE = year(index_time)) %>%
-  select(index, Appl_No, Product_No, Strength, Appl_Type, approveyear, Approval_Date, year_LOE) 
+  select(index, Appl_No, Product_No, Strength, Appl_Type, approveyear, Approval_Date, year_LOE, Trade_Name) 
 
 # get index for molecules without multiple strengths 
 genericPIV_Appl_No <- genericPIV_included %>%
@@ -155,7 +155,7 @@ branded_id <- NDC_PIV %>%
 branded_included <- df %>%
   filter(Appl_Type == "N") %>%
   inner_join(branded_id) %>%
-  select(index, Appl_No, Product_No, Strength, Appl_Type, Approval_Date) 
+  select(index, Appl_No, Product_No, Strength, Appl_Type, Approval_Date, Trade_Name) 
 
 # get index for molecules without multiple strengths 
 branded_Appl_No <- branded_included %>%
@@ -255,8 +255,7 @@ MEPS <- map_dfr(index, function(id){
   
   return(output)
 })
-
-
+  
 
 ###MEPS
 ####################################################################################
@@ -305,26 +304,6 @@ MEPS2007 <- MEPS2007 %>%
          price_private = RXPV07X
   ) %>%
   rename(weight = PERWT07F)
-
-MEPS2007_design <- svydesign(id       = ~ VARPSU,
-                              strata  = ~ VARSTR,
-                              weights = ~ PERWT07F,
-                              nest    = TRUE,
-                              data    = MEPS2007)
-
-summary(MEPS2007_design)
-
-test <- MEPS2007 %>% 
-  filter(RXNDC9 == "504740400")
-
-test_design <- svydesign(id       = ~ VARPSU,
-                             strata  = ~ VARSTR,
-                             weights = ~ PERWT07F,
-                             nest    = TRUE,
-                             data    = test)
-
-svymean(~ RXQUANTY, test_design, na.rm = TRUE)
-
 
 ####################################################################################
 ##Load MEPS 2008 data
@@ -919,17 +898,27 @@ MEPS_summary_weighted <- MEPS_summary_weighted %>%
   left_join(P_b_prior_LOE, by = "index")
 
 ####################################################################################
+##Add drug name, route
+####################################################################################
+
+drug_name <- generic_included %>%
+  distinct(index, Trade_Name)
+
+MEPS_summary_weighted <- MEPS_summary_weighted %>%
+  left_join(drug_name)
+
+####################################################################################
 ##Add therapeutic areas, route
 ####################################################################################
-#load("~/Dropbox/Advanced Method Project/Data/all.RData")
+load("~/Dropbox/Advanced Method Project/Data/all.RData")
 
 #keep index, oral, inject, ATC*
-#drug_info <- df %>%
-#  select(index, oral, inject, ATCA:ATCV) %>%
-#  distinct()
+drug_info <- df %>%
+  select(index, oral, inject, ATCA:ATCV) %>%
+  distinct()
 
-#MEPS_summary_weighted <- MEPS_summary_weighted %>% 
-#  left_join(drug_info, by = "index")
+MEPS_summary_weighted <- MEPS_summary_weighted %>% 
+  left_join(drug_info, by = "index")
 
 save(MEPS_summary, file = "MEPS_summary.Rdata")
 write.xlsx(MEPS_summary, "MEPS_summary.xlsx")
