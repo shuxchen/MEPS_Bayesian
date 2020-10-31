@@ -1,8 +1,22 @@
 load("NDC.Rdata")
+load("genericPIV.RData")
+load("genericnoPIV.RData")
+
 # 1. OB count
 df %>%
   distinct(index) %>%
   count()
+
+genericPIV_origin %>%
+  distinct(index) %>%
+  count()
+
+genericnoPIV_origin %>%
+  distinct(index) %>%
+  count()
+
+df <- genericPIV_origin %>%
+  rbind(genericnoPIV_origin)
 
 # 2. OB --> NDC count
 df_id <- df %>% 
@@ -37,6 +51,22 @@ NDC_df <- NDC_df_one_strength %>%
 
 NDC_df %>%
   distinct(index) %>%
+  count()
+
+genericPIV_id <- genericPIV_origin %>%
+  distinct(index)
+
+genericnoPIV_id <- genericnoPIV_origin %>%
+  distinct(index)
+
+NDC_df %>%
+  distinct(index) %>%
+  inner_join(genericPIV_id) %>%
+  count()
+
+NDC_df %>%
+  distinct(index) %>%
+  inner_join(genericnoPIV_id) %>%
   count()
 
 # 3. NDC to MEPS count
@@ -99,6 +129,33 @@ NDC_df_MEPS <- NDC_df %>%
 
 NDC_df_MEPS %>%
   distinct(index) %>%
+  count()
+
+NDC_df_MEPS %>%
+  distinct(index) %>%
+  inner_join(genericPIV_id) %>%
+  count()
+
+NDC_df_MEPS %>%
+  distinct(index) %>%
+  inner_join(genericnoPIV_id) %>%
+  count()
+
+NDC_df_MEPS %>%
+  distinct(index) %>%
+  inner_join(genericPIV_id) %>%
+  count()
+
+MEPS_summary_weighted %>%
+  filter(!is.na(P_b) & !is.na(P_g)) %>%
+  distinct(index) %>%
+  inner_join(genericPIV_id) %>%
+  count()
+
+MEPS_summary_weighted %>%
+  filter(!is.na(P_b) & !is.na(P_g)) %>%
+  distinct(index) %>%
+  inner_join(genericnoPIV_id) %>%
   count()
 
 NDC_df_MEPS %>%
