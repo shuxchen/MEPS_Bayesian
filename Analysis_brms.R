@@ -126,7 +126,7 @@ print(summary(fit_generic_random_intercept_noninformative),digits=5)
 print(summary(fit_generic_random_intercept_informative),digits=5) 
 
 ## prediction for noninformative
-fit_generic_random_intercept_noninformative_prediction <- predict(fit_generic_random_intercept_noninformative, newdata = generic_price_test, re_formula = ~ (1 | index))
+fit_generic_random_intercept_noninformative_prediction <- predict(fit_generic_random_intercept_noninformative, newdata = generic_price_test)
 
 fit_generic_random_intercept_noninformative_prediction <- fit_generic_random_intercept_noninformative_prediction %>%
   cbind(generic_price_test[1]) %>%
@@ -135,7 +135,7 @@ fit_generic_random_intercept_noninformative_prediction <- fit_generic_random_int
 mean(fit_generic_random_intercept_noninformative_prediction$CI_covered)
 
 ## prediction for informative
-fit_generic_random_intercept_informative_prediction <- predict(fit_generic_random_intercept_informative, newdata = generic_price_test, re_formula = ~ (1 | index))
+fit_generic_random_intercept_informative_prediction <- predict(fit_generic_random_intercept_informative, newdata = generic_price_test)
 
 fit_generic_random_intercept_informative_prediction <- fit_generic_random_intercept_informative_prediction %>%
   cbind(generic_price_test[1]) %>%
@@ -147,13 +147,13 @@ mean(fit_generic_random_intercept_informative_prediction$CI_covered)
 fit_generic_random_slope_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor|ll), 
                                 data = generic_price_train, family = gaussian(),
                                 iter = 6000, warmup = 1000, chains = 4, cores = 4,
-                                control = list(adapt_delta = .99, max_treedepth = 20),
+                                control = list(adapt_delta = .995, max_treedepth = 20),
                                 seed = 190831)
 
 fit_generic_random_slope_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor|ll), 
                                                data = generic_price_train, family = gaussian(),
                                                iter = 6000, warmup = 1000, chains = 4, cores = 4,
-                                               control = list(adapt_delta = .99, max_treedepth = 20),
+                                               control = list(adapt_delta = .995, max_treedepth = 20),
                                                seed = 190831,
                                             set_prior("normal(0, 10)", class = "b"),
                                             set_prior("normal(-0.08, 0.02)", class = "b", coef = "competitor"),
@@ -162,7 +162,7 @@ fit_generic_random_slope_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_L
 fit_generic_random_slope_informative_bias_correction <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor|ll), 
                                             data = generic_price_train, family = gaussian(),
                                             iter = 6000, warmup = 1000, chains = 4, cores = 4,
-                                            control = list(adapt_delta = .99, max_treedepth = 20),
+                                            control = list(adapt_delta = .995, max_treedepth = 20),
                                             seed = 190831,
                                             set_prior("normal(-0.11, 0.07)", class = "b", coef = "competitor"),
                                             set_prior("normal(0, 10)", class = "b"),
@@ -239,10 +239,7 @@ print(summary(fit_generic_random_slope_all_noninformative),digits=5)
 print(summary(fit_generic_random_slope_all_informative),digits=5) 
 
 ## Prediction, noninformative
-fit_generic_random_slope_all_noninformative_prediction <- predict(fit_generic_random_slope_all_noninformative, newdata = generic_price_test, re_formula = ~ (1 | index))
-
-fit_generic_random_slope_all_noninformative_prediction <- predict(fit_generic_random_slope_all_noninformative, newdata = generic_price_test, re_formula = ~ (1 | index))
-
+fit_generic_random_slope_all_noninformative_prediction <- predict(fit_generic_random_slope_all_noninformative, newdata = generic_price_test)
 
 fit_generic_random_slope_all_noninformative_prediction <- fit_generic_random_slope_all_noninformative_prediction %>%
   cbind(generic_price_test[1]) %>%
@@ -251,7 +248,7 @@ fit_generic_random_slope_all_noninformative_prediction <- fit_generic_random_slo
 mean(fit_generic_random_slope_all_noninformative_prediction$CI_covered)
 
 ## Prediction, informative
-fit_generic_random_slope_all_informative_prediction <- predict(fit_generic_random_slope_all_informative, newdata = generic_price_test, re_formula = ~ (1 | index))
+fit_generic_random_slope_all_informative_prediction <- predict(fit_generic_random_slope_all_informative, newdata = generic_price_test)
 
 fit_generic_random_slope_all_informative_prediction <- fit_generic_random_slope_all_informative_prediction %>%
   cbind(generic_price_test[1]) %>%

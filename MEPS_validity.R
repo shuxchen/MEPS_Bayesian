@@ -1,6 +1,7 @@
 load("NDC.Rdata")
 load("genericPIV.RData")
 load("genericnoPIV.RData")
+load("all.RData")
 
 # 1. OB count
 df %>%
@@ -205,6 +206,54 @@ MEPS_NDC_matched <- MEPS_NDC_matched %>%
   left_join(MEPS_NDC_notmatched, by = "year") %>%
   mutate(p = n_match / (n + n_match))
 
+# MEPS NDC-OB
+MEPS_NDC_OB_antijoin <- MEPS_all_NDC %>%
+  anti_join(NDC_df, by = c("RXNDC9" = "NDC9"))
+
+MEPS_NDC_OB_antijoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_OB_notmatched <- MEPS_NDC_OB_antijoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_OB_innerjoin <- MEPS_all_NDC %>%
+  inner_join(NDC_df, by = c("RXNDC9" = "NDC9"))
+
+MEPS_NDC_OB_innerjoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_OB_matched <- MEPS_NDC_OB_innerjoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_OB_matched <- MEPS_NDC_OB_matched %>%
+  rename(n_match = n) %>%
+  left_join(MEPS_NDC_OB_notmatched, by = "year") %>%
+  mutate(p = n_match / (n + n_match))
+
+MEPS_NDC_OB_matched_p <- MEPS_NDC_OB_matched %>%
+  dplyr::select(year, p) %>%
+  mutate(group = "OB-NDC")
+
+MEPS_NDC_matched_p <- MEPS_NDC_matched %>%
+  dplyr::select(year, p) %>%
+  mutate(group = "NDC")
+
+MEPS_NDC_matched_p <- MEPS_NDC_matched_p %>%
+  rbind(MEPS_NDC_OB_matched_p) %>%
+  mutate(p = p*100)
+
+ggplot(data = MEPS_NDC_matched_p, aes(x=year, y=p, group=group, color=group)) +
+  geom_line() +
+  ggtitle("% of MEPS drugs that can be matched using NDC over time") +
+  ylab("%") +
+  ylim(0, 100)
+
 #consider whether imputed ones have worse quality
 MEPS_NDC_notmatched_imputed <- MEPS_NDC_antijoin %>%
   group_by(year, imputed) %>%
@@ -221,6 +270,14 @@ MEPS_NDC_matched_imputed <- MEPS_NDC_matched_imputed %>%
   left_join(MEPS_NDC_notmatched_imputed, on = c("year", "imputed")) %>%
   mutate(p = n_match / (n + n_match))
 
+MEPS_NDC_matched_imputed <- MEPS_NDC_matched_imputed %>%
+  mutate(p = 100* p)
+
+ggplot(data = MEPS_NDC_matched_imputed, aes(x=year, y=p, group=as.factor(imputed), color=as.factor(imputed))) +
+  geom_line() +
+  ggtitle("% of MEPS drugs that can be matched using NDC (imputed or not)") +
+  ylab("%") +
+  ylim(0, 100)
 
 ## use 9 digits only
 MEPS_all_NDC$RXNDC11 <- MEPS_all_NDC$RXNDC9
