@@ -2,6 +2,7 @@ load("NDC.Rdata")
 load("genericPIV.RData")
 load("genericnoPIV.RData")
 load("all.RData")
+load("NDC_historical.Rdata")
 
 # 1. OB count
 df %>%
@@ -19,7 +20,7 @@ genericnoPIV_origin %>%
 df <- genericPIV_origin %>%
   rbind(genericnoPIV_origin)
 
-# 2. OB --> NDC count
+# 2.1 OB --> NDC count
 df_id <- df %>% 
   distinct(index)
 
@@ -66,6 +67,36 @@ NDC_df %>%
   count()
 
 NDC_df %>%
+  distinct(index) %>%
+  inner_join(genericnoPIV_id) %>%
+  count()
+
+#2.2 OB --> NDC historical
+
+NDC_df_historical <- merge(NDC_historical, df_included, by=c("Appl_No", "Product_No"))
+
+NDC_df_historical %>%
+  distinct(index) %>%
+  count()
+
+NDC_df_historical <- NDC_df_historical %>%
+  dplyr::select(index, Appl_No, Product_No, NDC9, NDC11)
+
+NDC_df_combined <- NDC_df %>%
+  dplyr::select(index, Appl_No, Product_No, NDC9, NDC11) %>%
+  rbind(NDC_df_historical) %>%
+  distinct()
+
+NDC_df_combined %>%
+  distinct(index) %>%
+  count()
+
+NDC_df_combined %>%
+  distinct(index) %>%
+  inner_join(genericPIV_id) %>%
+  count()
+
+NDC_df_combined %>%
   distinct(index) %>%
   inner_join(genericnoPIV_id) %>%
   count()
@@ -125,6 +156,7 @@ n_imputed <- MEPS_all_NDC %>%
   mutate(percent = n/sum(n)) %>%
   filter(imputed == 1)
   
+#original OB-NDC
 NDC_df_MEPS <- NDC_df %>%
   inner_join(MEPS_all_NDC, by = c("NDC9" = "RXNDC9"))
 
@@ -142,10 +174,24 @@ NDC_df_MEPS %>%
   inner_join(genericnoPIV_id) %>%
   count()
 
-NDC_df_MEPS %>%
+# OB-NDC with historical NDC 
+NDC_df_combined_MEPS <- NDC_df_combined %>%
+  inner_join(MEPS_all_NDC, by = c("NDC9" = "RXNDC9"))
+
+NDC_df_combined_MEPS %>%
+  distinct(index) %>%
+  count()
+
+NDC_df_combined_MEPS %>%
   distinct(index) %>%
   inner_join(genericPIV_id) %>%
   count()
+
+NDC_df_combined_MEPS %>%
+  distinct(index) %>%
+  inner_join(genericnoPIV_id) %>%
+  count()
+
 
 MEPS_summary_weighted %>%
   filter(!is.na(P_b) & !is.na(P_g)) %>%
@@ -249,6 +295,84 @@ MEPS_NDC_matched_p <- MEPS_NDC_matched_p %>%
   mutate(p = p*100)
 
 ggplot(data = MEPS_NDC_matched_p, aes(x=year, y=p, group=group, color=group)) +
+  geom_line() +
+  ggtitle("% of MEPS drugs that can be matched using NDC over time") +
+  ylab("%") +
+  ylim(0, 100)
+
+# MEPS vs. OB-NDC with historical NDC
+MEPS_NDC_OB_combined_antijoin <- MEPS_all_NDC %>%
+  anti_join(NDC_df_combined, by = c("RXNDC9" = "NDC9"))
+
+MEPS_NDC_OB_combined_antijoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_OB_combined_notmatched <- MEPS_NDC_OB_combined_antijoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_OB_combined_innerjoin <- MEPS_all_NDC %>%
+  inner_join(NDC_df_combined, by = c("RXNDC9" = "NDC9"))
+
+MEPS_NDC_OB_combined_innerjoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_OB_combined_matched <- MEPS_NDC_OB_combined_innerjoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_OB_combined_matched <- MEPS_NDC_OB_combined_matched %>%
+  rename(n_match = n) %>%
+  left_join(MEPS_NDC_OB_combined_notmatched, by = "year") %>%
+  mutate(p = n_match / (n + n_match))
+
+MEPS_NDC_OB_combined_matched_p <- MEPS_NDC_OB_combined_matched %>%
+  dplyr::select(year, p) %>%
+  mutate(group = "OB-NDC")
+
+MEPS_NDC_combined_antijoin <- MEPS_all_NDC %>%
+  anti_join(NDC_historical, by = c("RXNDC9" = "NDC9"))
+
+MEPS_NDC_combined_antijoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_combined_notmatched <- MEPS_NDC_combined_antijoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_combined_innerjoin <- MEPS_all_NDC %>%
+  inner_join(NDC_historical, by = c("RXNDC9" = "NDC9"))
+
+MEPS_NDC_combined_innerjoin %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_combined_matched <- MEPS_NDC_combined_innerjoin %>%
+  group_by(year) %>%
+  distinct(RXNAME) %>%
+  count()
+
+MEPS_NDC_combined_matched <- MEPS_NDC_combined_matched %>%
+  rename(n_match = n) %>%
+  left_join(MEPS_NDC_notmatched, by = "year") %>%
+  mutate(p = n_match / (n + n_match))
+
+
+MEPS_NDC_combined_matched_p <- MEPS_NDC_combined_matched %>%
+  dplyr::select(year, p) %>%
+  mutate(group = "NDC")
+
+MEPS_NDC_combined_matched_p <- MEPS_NDC_combined_matched_p %>%
+  rbind(MEPS_NDC_OB_combined_matched_p) %>%
+  mutate(p = p*100)
+
+ggplot(data = MEPS_NDC_combined_matched_p, aes(x=year, y=p, group=group, color=group)) +
   geom_line() +
   ggtitle("% of MEPS drugs that can be matched using NDC over time") +
   ylab("%") +

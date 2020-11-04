@@ -13,6 +13,8 @@ load("all.RData")
 load("genericPIV.RData")
 load("genericnoPIV.RData")
 load("NDC.Rdata")
+load("NDC_historical.Rdata")
+
 CPI <- read_delim("CPI_CU_Summaries.txt",
                      "\t", 
                      escape_double = FALSE, 
@@ -73,8 +75,14 @@ NDC_noPIV_multiple_strengths %>%
   distinct(index) %>%
   count()
 
+NDC_noPIV_historical <- merge(NDC_historical, genericnoPIV, by=c("Appl_No", "Product_No")) %>%
+  dplyr::select(index, NDC9, NDC11)
+
 NDC_noPIV <- NDC_noPIV_one_strength %>%
-  bind_rows(NDC_noPIV_multiple_strengths)
+  bind_rows(NDC_noPIV_multiple_strengths) %>%
+  dplyr::select(index, NDC9, NDC11) %>%
+  rbind(NDC_noPIV_historical) %>%
+  distinct()
 
 save(NDC_noPIV, file = "NDC_noPIV.Rdata")
 
@@ -134,13 +142,16 @@ NDC_PIV_multiple_strengths %>%
   distinct(index) %>%
   count()
 
+NDC_PIV_historical <- merge(NDC_historical, genericPIV, by=c("Appl_No", "Product_No")) %>%
+  dplyr::select(index, NDC9, NDC11)
+
 NDC_PIV <- NDC_PIV_one_strength %>%
-  bind_rows(NDC_PIV_multiple_strengths)
+  bind_rows(NDC_PIV_multiple_strengths) %>%
+  dplyr::select(index, NDC9, NDC11) %>%
+  rbind(NDC_PIV_historical) %>%
+  distinct()
 
 save(NDC_PIV, file = "NDC_PIV.Rdata")
-
-#check NDC code format
-test <- NDC_noPIV[, c("Appl_No", "PRODUCTNDC", "NDC")] 
 
 #Merge PC and noPC generics
 NDC_generic <- NDC_noPIV %>%
@@ -187,8 +198,14 @@ NDC_branded_multiple_strengths %>%
   distinct(index) %>%
   count()
 
+NDC_branded_historical <- merge(NDC_historical, branded_included, by=c("Appl_No", "Product_No")) %>%
+  dplyr::select(index, NDC9, NDC11)
+
 NDC_branded <- NDC_branded_one_strength %>%
-  bind_rows(NDC_branded_multiple_strengths)
+  bind_rows(NDC_branded_multiple_strengths) %>%
+  dplyr::select(index, NDC9, NDC11) %>%
+  rbind(NDC_branded_historical) %>%
+  distinct()
 
 NDC_branded_id <- NDC_branded %>%
   distinct(index)
@@ -507,6 +524,12 @@ MEPS2017 <- MEPS2017 %>%
 
 #Filter branded drug only, filtering by NDC code (not drug name)
 #calculate total # of branded drug and generic drug for each index in 2007
+
+NDC_branded <- NDC_branded %>%
+  rename(NDC = NDC9)
+
+NDC_generic <- NDC_generic %>%
+  rename(NDC = NDC9)
 
 getMEPSannual <- function(MEPS, index){
   map_dfr(index, function(id){
