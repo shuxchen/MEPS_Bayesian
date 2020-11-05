@@ -51,6 +51,18 @@ NDC_df_multiple_strengths <- merge(NDC, df_multiple_strengths, by=c("Appl_No", "
 NDC_df <- NDC_df_one_strength %>%
   bind_rows(NDC_df_multiple_strengths)
 
+NDC_df_historical <- merge(NDC_historical, df_included, by=c("Appl_No", "Product_No")) %>%
+  dplyr::select(index, NDC9)
+
+NDC_df <- NDC_df %>%
+  dplyr::select(index, NDC9) %>%
+  rbind(NDC_df_historical)
+
+#NDC_df <- NDC_generic %>%
+#  rbind(NDC_branded) %>%
+#  rename(NDC9 = NDC) %>%
+#  dplyr::select(index, NDC9)
+
 NDC_df %>%
   distinct(index) %>%
   count()
@@ -79,11 +91,18 @@ NDC_df_historical %>%
   distinct(index) %>%
   count()
 
+#NDC_df_historical <- NDC_df_historical %>%
+#  dplyr::select(index, Appl_No, Product_No, NDC9, NDC11)
+
+#NDC_df_combined <- NDC_df %>%
+#  dplyr::select(index, Appl_No, Product_No, NDC9, NDC11) %>%
+#  rbind(NDC_df_historical) %>%
+#  distinct()
 NDC_df_historical <- NDC_df_historical %>%
-  dplyr::select(index, Appl_No, Product_No, NDC9, NDC11)
+  dplyr::select(index, NDC9)
 
 NDC_df_combined <- NDC_df %>%
-  dplyr::select(index, Appl_No, Product_No, NDC9, NDC11) %>%
+  dplyr::select(index, NDC9) %>%
   rbind(NDC_df_historical) %>%
   distinct()
 
@@ -209,20 +228,6 @@ NDC_df_MEPS %>%
   distinct(RXNAME) %>%
   count()
 
-MEPS_MEPS_NDC_antijoin <- MEPS_all_NDC %>%
-  anti_join(NDC_df, by = c("RXNDC9" = "NDC9"))
-
-MEPS_MEPS_NDC_antijoin %>%
-  distinct(RXNAME) %>%
-  count()
-
-MEPS_MEPS_NDC_innerjoin <- MEPS_all_NDC %>%
-  inner_join(NDC_df, by = c("RXNDC9" = "NDC9"))
-
-MEPS_MEPS_NDC_innerjoin %>%
-  distinct(RXNAME) %>%
-  count()
-
 MEPS_NDC_antijoin <- MEPS_all_NDC %>%
   anti_join(NDC, by = c("RXNDC9" = "NDC9"))
 
@@ -334,8 +339,18 @@ MEPS_NDC_OB_combined_matched_p <- MEPS_NDC_OB_combined_matched %>%
   dplyr::select(year, p) %>%
   mutate(group = "OB-NDC")
 
+NDC_historical_id <- NDC_historical %>%
+  dplyr::select(NDC9)
+
+NDC_id <- NDC %>%
+  dplyr::select(NDC9)
+
+NDC_combined <- NDC_historical_id %>%
+  rbind(NDC_id) %>%
+  distinct()
+
 MEPS_NDC_combined_antijoin <- MEPS_all_NDC %>%
-  anti_join(NDC_historical, by = c("RXNDC9" = "NDC9"))
+  anti_join(NDC_combined, by = c("RXNDC9" = "NDC9"))
 
 MEPS_NDC_combined_antijoin %>%
   distinct(RXNAME) %>%
@@ -347,7 +362,7 @@ MEPS_NDC_combined_notmatched <- MEPS_NDC_combined_antijoin %>%
   count()
 
 MEPS_NDC_combined_innerjoin <- MEPS_all_NDC %>%
-  inner_join(NDC_historical, by = c("RXNDC9" = "NDC9"))
+  inner_join(NDC_combined, by = c("RXNDC9" = "NDC9"))
 
 MEPS_NDC_combined_innerjoin %>%
   distinct(RXNAME) %>%

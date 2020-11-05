@@ -535,11 +535,13 @@ getMEPSannual <- function(MEPS, index){
   map_dfr(index, function(id){
     data_branded <- NDC_branded %>%
       filter(index == id) %>%
-      select(NDC) 
+      select(NDC) %>%
+      distinct()
     
     data_generic <- NDC_generic %>%
       filter(index == id) %>%
-      select(NDC) 
+      select(NDC) %>%
+      distinct()
     
     NDC_branded_list <- data_branded$NDC
 
@@ -590,11 +592,13 @@ getMEPSannual_weighted <- function(MEPS, index){
   map_dfr(index, function(id){
     data_branded <- NDC_branded %>%
       filter(index == id) %>%
-      select(NDC) 
+      select(NDC) %>%
+      distinct()
     
     data_generic <- NDC_generic %>%
       filter(index == id) %>%
-      select(NDC) 
+      select(NDC) %>%
+      distinct()
     
     NDC_branded_list <- data_branded$NDC
     

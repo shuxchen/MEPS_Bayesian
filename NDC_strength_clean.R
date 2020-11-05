@@ -5,6 +5,15 @@ NDC_package <- NDC_package[, c(1, 3)]
 NDC <- merge(NDC, NDC_package, by=c("PRODUCTID"), all.x=T)
 NDC <- NDC[!duplicated(NDC),]
 
+NDC_excluded <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/ndc_excluded/Products_excluded.xlsx")
+NDC_excluded_package <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/ndc_excluded/Packages_excluded.xlsx")
+NDC_excluded_package <- NDC_excluded_package[, c(1, 3)]
+NDC_excluded <- merge(NDC_excluded, NDC_excluded_package, by=c("PRODUCTID"), all.x=T)
+NDC_excluded <- NDC_excluded[!duplicated(NDC_excluded),]
+NDC_excluded$NDC9 <- gsub("-", "", NDC_excluded$PRODUCTNDC)
+save(NDC_excluded, file = "NDC_excluded.Rdata")
+
+
 NDC_unfinished <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/ndc_unfinished/unfinished_product.xlsx")
 NDC_unfinished_package <- read_excel("~/Dropbox/Advanced Method Project/Data/ndcxls_20180706/ndc_unfinished/unfinished_package.xlsx")
 NDC_unfinished_package <- NDC_unfinished_package[, c(1, 3)]
@@ -16,6 +25,49 @@ NDC_unfinished_package_excluded <- read_excel("~/Dropbox/Advanced Method Project
 NDC_unfinished_package_excluded <- NDC_unfinished_package_excluded[, c(1, 3)]
 NDC_unfinished_excluded <- merge(NDC_unfinished_excluded, NDC_unfinished_package_excluded, by=c("PRODUCTID"), all.x=T)
 NDC_unfinished_excluded <- NDC_unfinished_excluded[!duplicated(NDC_unfinished_excluded),]
+
+NDC_2014 <- read.csv("~/Dropbox/Advanced Method Project/Data/NDC_historical/2014/product.csv")
+NDC_2014_package <- read.csv("~/Dropbox/Advanced Method Project/Data/NDC_historical/2014/package.csv")
+NDC_2014_package <- NDC_2014_package[, c(1, 3)]
+NDC_2014 <- merge(NDC_2014, NDC_2014_package, by=c("prodid"), all.x=T)
+NDC_2014 <- NDC_2014[!duplicated(NDC_2014),]
+
+NDC %>%
+  anti_join(NDC_2014, by =c("PRODUCTID" = "prodid")) %>%
+  count()
+
+NDC_2014 %>%
+  anti_join(NDC, by =c("prodid" = "PRODUCTID" )) %>%
+  count()
+
+NDC_2014 <- NDC_2014 %>%
+  dplyr::select(-listing_record_cert, -stmarkdate, -endmarkdate) %>%
+  rename(PRODUCTID=prodid,
+         PRODUCTNDC=ndc,
+         PRODUCTTYPENAME=prodtype,
+         PROPRIETARYNAME=propname,
+         PROPRIETARYNAMESUFFIX=propsuf,
+         NONPROPRIETARYNAME=npropname,
+         DOSAGEFORMNAME=dosename,
+         ROUTENAME=routename,
+         STARTMARKETINGDATE=stmarkdatestr,
+         ENDMARKETINGDATE=endmarkdatestr,
+         MARKETINGCATEGORYNAME=markname,
+         APPLICATIONNUMBER=appnum,
+         LABELERNAME=labelname,
+         SUBSTANCENAME=subname,
+         ACTIVE_NUMERATOR_STRENGTH=actnumstr,
+         ACTIVE_INGRED_UNIT=actingunit,
+         PHARM_CLASSES=pharmclas,
+         DEASCHEDULE=deasched,
+         NDC_EXCLUDE_FLAG=ndc_exclude_flag,
+         LISTING_RECORD_CERTIFIED_THROUGH=listing_record_certstr,
+         NDCPACKAGECODE=packcode)
+
+NDC <- NDC %>%
+  rbind(NDC_2014)
+
+NDC <- NDC[!duplicated(NDC), ]
 
 #NDC <- NDC %>%
 #  dplyr::select(1:4, DOSAGEFORMNAME, STARTMARKETINGDATE, MARKETINGCATEGORYNAME, LABELERNAME, SUBSTANCENAME, ACTIVE_NUMERATOR_STRENGTH, ACTIVE_INGRED_UNIT, NDCPACKAGECODE, APPLICATIONNUMBER)
@@ -69,7 +121,7 @@ NDC<-NDC[(! NDC$Appl_type=="BA" | ! NDC$Appl_type=="BN"), ]
 
 
 #Make the strength consistent across two datasets
-NDC<-NDC %>% mutate_at(vars(-ACTIVE_NUMERATOR_STRENGTH), funs(toupper))
+NDC<-NDC %>% mutate_at(vars(-ACTIVE_NUMERATOR_STRENGTH, -LABELERNAME), funs(toupper))
 
 NDC$ACTIVE_INGRED_UNIT[NDC$ACTIVE_INGRED_UNIT == "MG/1"] <- "MG"
 NDC$ACTIVE_INGRED_UNIT[NDC$ACTIVE_INGRED_UNIT == "MG/1; MG/1"] <- "MG; MG"
