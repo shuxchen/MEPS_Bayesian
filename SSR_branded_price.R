@@ -1,32 +1,51 @@
 SSR_net <- read_excel("SSRHealthDatasets/NetSales.xlsx")
 SSR_NDC <- read_excel("SSRHealthDatasets/NDCcrosslist.xlsx")
+SSR_discount <- read_excel("SSRHealthDatasets/Discountrates_products.xlsx")
+load("NDC_branded.Rdata")
+load("MEPS_summary_weighted.Rdata")
+
+
+SSR_discount <- SSR_discount %>%
+  rename(Type = `...4`)
+
+SSR_discount_WAC <- SSR_discount %>%
+  filter(Type == "Total WAC-net discount %")
+
+#SSR_discount_WAC_price <- SSR_NDC %>%
+#  left_join(SSR_discount_WAC, on = "product") %>%
+#  rename(NDC = `Ndc 11`) 
+
+#SSR_discount_WAC_price$NDC = as.character(SSR_discount_WAC_price$NDC)
+#SSR_discount_WAC_price$NDC <- str_pad(SSR_discount_WAC_price$NDC, 11, pad = "0")
 
 SSR_price <- SSR_NDC %>%
-  left_join(SSR_net, on = "product") %>%
+  left_join(SSR_net, by = c("Product", "Class")) %>%
   rename(NDC = `Ndc 11`) 
 
 SSR_price$NDC = as.character(SSR_price$NDC)
 SSR_price$NDC <- str_pad(SSR_price$NDC, 11, pad = "0")
 
- 
 SSR_price <- SSR_price %>%
-  mutate(p_2007 = (`2007Q1` + `2007Q2` + `2007Q3` + `2007Q4`)/4,
-         p_2008 = (`2008Q1` + `2008Q2` + `2008Q3` + `2008Q4`)/4,
-         p_2009 = (`2009Q1` + `2009Q2` + `2009Q3` + `2009Q4`)/4,
-         p_2010 = (`2010Q1` + `2010Q2` + `2010Q3` + `2010Q4`)/4,
-         p_2011 = (`2011Q1` + `2011Q2` + `2011Q3` + `2011Q4`)/4,
-         p_2012 = (`2012Q1` + `2012Q2` + `2012Q3` + `2012Q4`)/4,
-         p_2013 = (`2013Q1` + `2013Q2` + `2013Q3` + `2013Q4`)/4,
-         p_2014 = (`2014Q1` + `2014Q2` + `2014Q3` + `2014Q4`)/4,
-         p_2015 = (`2015Q1` + `2015Q2` + `2015Q3` + `2015Q4`)/4,
-         p_2016 = (`2016Q1` + `2016Q2` + `2016Q3` + `2016Q4`)/4,
-         p_2017 = (`2017Q1` + `2017Q2` + `2017Q3` + `2017Q4`)/4,
-         p_2018 = (`2018Q1` + `2018Q2` + `2018Q3` + `2018Q4`)/4) %>%
+  left_join(SSR_discount_WAC, by = c("Product", "Class"))
+
+SSR_price <- SSR_price %>%
+  mutate(p_2007 = (`2007Q1.x`/(1-`2007Q1.y`) + `2007Q2.x`/(1-`2007Q2.y`) + `2007Q3.x`/(1-`2007Q3.y`) + `2007Q4.x`/(1-`2007Q4.y`))/4,
+         p_2008 = (`2008Q1.x`/(1-`2008Q1.y`) + `2008Q2.x`/(1-`2008Q2.y`) + `2008Q3.x`/(1-`2008Q3.y`) + `2008Q4.x`/(1-`2008Q4.y`))/4,
+         p_2009 = (`2009Q1.x`/(1-`2009Q1.y`) + `2009Q2.x`/(1-`2009Q2.y`) + `2009Q3.x`/(1-`2009Q3.y`) + `2009Q4.x`/(1-`2009Q4.y`))/4,
+         p_2010 = (`2010Q1.x`/(1-`2010Q1.y`) + `2010Q2.x`/(1-`2010Q2.y`) + `2010Q3.x`/(1-`2010Q3.y`) + `2010Q4.x`/(1-`2010Q4.y`))/4,
+         p_2011 = (`2011Q1.x`/(1-`2011Q1.y`) + `2011Q2.x`/(1-`2011Q2.y`) + `2011Q3.x`/(1-`2011Q3.y`) + `2011Q4.x`/(1-`2011Q4.y`))/4,
+         p_2012 = (`2012Q1.x`/(1-`2012Q1.y`) + `2012Q2.x`/(1-`2012Q2.y`) + `2012Q3.x`/(1-`2012Q3.y`) + `2012Q4.x`/(1-`2012Q4.y`))/4,
+         p_2013 = (`2013Q1.x`/(1-`2013Q1.y`) + `2013Q2.x`/(1-`2013Q2.y`) + `2013Q3.x`/(1-`2013Q3.y`) + `2013Q4.x`/(1-`2013Q4.y`))/4,
+         p_2014 = (`2014Q1.x`/(1-`2014Q1.y`) + `2014Q2.x`/(1-`2014Q2.y`) + `2014Q3.x`/(1-`2014Q3.y`) + `2014Q4.x`/(1-`2014Q4.y`))/4,
+         p_2015 = (`2015Q1.x`/(1-`2015Q1.y`) + `2015Q2.x`/(1-`2015Q2.y`) + `2015Q3.x`/(1-`2015Q3.y`) + `2015Q4.x`/(1-`2015Q4.y`))/4,
+         p_2016 = (`2016Q1.x`/(1-`2016Q1.y`) + `2016Q2.x`/(1-`2016Q2.y`) + `2016Q3.x`/(1-`2016Q3.y`) + `2016Q4.x`/(1-`2016Q4.y`))/4,
+         p_2017 = (`2017Q1.x`/(1-`2017Q1.y`) + `2017Q2.x`/(1-`2017Q2.y`) + `2017Q3.x`/(1-`2017Q3.y`) + `2017Q4.x`/(1-`2017Q4.y`))/4,
+         p_2018 = (`2018Q1.x`/(1-`2018Q1.y`) + `2018Q2.x`/(1-`2018Q2.y`) + `2018Q3.x`/(1-`2018Q3.y`) + `2018Q4.x`/(1-`2018Q4.y`))/4) %>%
   dplyr::select(NDC, p_2007, p_2008, p_2009, p_2010, p_2011, p_2012, p_2013, p_2014, p_2015, p_2016, p_2017, p_2018)
 
 # 1. get branded price for all NDC_branded
 NDC_branded <- NDC_branded %>%
-  left_join(SSR_price, on = "NDC")
+  left_join(SSR_price, by = c("NDC11" = "NDC"))
 
 NDC_branded_SSR <- NDC_branded %>%
   dplyr::select(index, p_2012, p_2013, p_2014, p_2015, p_2016, p_2017, p_2018) %>%
@@ -50,3 +69,23 @@ NDC_branded_SSR_long <- NDC_branded_SSR_long %>%
   mutate(year = as.numeric(year) + 2011)
 
 save(NDC_branded_SSR_long, file = "NDC_branded_SSR.Rdata")
+
+MEPS_summary_weighted <- MEPS_summary_weighted %>%
+  left_join(NDC_branded_SSR_long, by = c("index", "year"))
+
+P_b_SSR_prior_LOE <- MEPS_summary_weighted %>%
+  filter(t_LOE == -1) %>%
+  dplyr::select(index, P_b_SSR) %>%
+  rename(P_b_SSR_prior_LOE = P_b_SSR)
+
+MEPS_summary_weighted <- MEPS_summary_weighted %>% 
+  left_join(P_b_SSR_prior_LOE, by = "index")
+
+save(MEPS_summary_weighted, file = "MEPS_summary_weighted.Rdata")
+write.xlsx(MEPS_summary_weighted, "MEPS_summary_weighted.xlsx")
+
+save(MEPS_summary_weighted, file = "~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian/MEPS_summary_weighted.Rdata")
+write.xlsx(MEPS_summary_weighted, "~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian/MEPS_summary_weighted.xlsx")
+
+test <- MEPS_summary_weighted %>%
+  select(index, year, P_b, P_b_SSR, t_LOE)

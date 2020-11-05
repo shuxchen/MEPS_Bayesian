@@ -956,5 +956,6 @@ write.xlsx(MEPS_summary_weighted, "MEPS_summary_weighted.xlsx")
 save(MEPS_summary_weighted, file = "~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian/MEPS_summary_weighted.Rdata")
 write.xlsx(MEPS_summary_weighted, "~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian/MEPS_summary_weighted.xlsx")
 
+save(NDC_branded, file = "NDC_branded.Rdata")
 
 
