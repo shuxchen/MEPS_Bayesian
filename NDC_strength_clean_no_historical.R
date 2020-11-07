@@ -83,7 +83,7 @@ NDC_2014 <- NDC_2014 %>%
          NDCPACKAGECODE=packcode) 
 
 NDC <- NDC %>%
-  rbind(NDC_2014) %>%
+  #rbind(NDC_2014) %>%
   dplyr::select(PRODUCTTYPENAME,
                 PROPRIETARYNAME,
                 #PROPRIETARYNAMESUFFIX,
@@ -107,8 +107,8 @@ NDC <- NDC %>%
 
 NDC <- NDC[!duplicated(NDC), ]
 
-NDC <- NDC %>%
-  rbind(NDC_2018) 
+#NDC <- NDC %>%
+#  rbind(NDC_2018) 
 
 NDC$ID <- seq.int(nrow(NDC))
 
@@ -641,8 +641,8 @@ NDC$Strength[NDC$Appl_No=="021398"] <- "0.2%;0.5% BASE"
 NDC$Strength[NDC$PRODUCTNDC=="0049-0024"] <- "10GM BASE/VIAL;5GM BASE/VIAL"
 
 #Stopped at mg/ml;mg/ml (not finished)
-
-save(NDC, file = "NDC.Rdata")
+NDC_no_historical <- NDC
+save(NDC_no_historical, file = "NDC_no_historical.Rdata")
 
 #300 UNITS/ML (300 UNITS/ML)
 

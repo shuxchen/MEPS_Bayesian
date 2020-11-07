@@ -171,24 +171,24 @@ MEPS_NDC_antijoin <- MEPS_all_NDC %>%
   anti_join(NDC, by = c("RXNDC9" = "NDC9"))
 
 MEPS_NDC_antijoin %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_notmatched <- MEPS_NDC_antijoin %>%
   group_by(year) %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_innerjoin <- MEPS_all_NDC %>%
   inner_join(NDC, by = c("RXNDC9" = "NDC9"))
 
 MEPS_NDC_innerjoin %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_matched <- MEPS_NDC_innerjoin %>%
   group_by(year) %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_matched <- MEPS_NDC_matched %>%
@@ -210,24 +210,24 @@ MEPS_NDC_combined_antijoin <- MEPS_all_NDC %>%
   anti_join(NDC_combined, by = c("RXNDC9" = "NDC9"))
 
 MEPS_NDC_combined_antijoin %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_combined_notmatched <- MEPS_NDC_combined_antijoin %>%
   group_by(year) %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_combined_innerjoin <- MEPS_all_NDC %>%
   inner_join(NDC_combined, by = c("RXNDC9" = "NDC9"))
 
 MEPS_NDC_combined_innerjoin %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_combined_matched <- MEPS_NDC_combined_innerjoin %>%
   group_by(year) %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_combined_matched <- MEPS_NDC_combined_matched %>%
@@ -241,24 +241,24 @@ MEPS_NDC_no_historical_antijoin <- MEPS_all_NDC %>%
   anti_join(NDC_no_historical, by = c("RXNDC9" = "NDC9"))
 
 MEPS_NDC_no_historical_antijoin %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_no_historical_notmatched <- MEPS_NDC_no_historical_antijoin %>%
   group_by(year) %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_no_historical_innerjoin <- MEPS_all_NDC %>%
   inner_join(NDC_no_historical, by = c("RXNDC9" = "NDC9"))
 
 MEPS_NDC_no_historical_innerjoin %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_no_historical_matched <- MEPS_NDC_no_historical_innerjoin %>%
   group_by(year) %>%
-  distinct(RXNAME) %>%
+  distinct(RXNDC9) %>%
   count()
 
 MEPS_NDC_no_historical_matched <- MEPS_NDC_no_historical_matched %>%
@@ -285,39 +285,6 @@ MEPS_NDC_matched_p <- MEPS_NDC_matched_p %>%
 
 ggplot(data = MEPS_NDC_matched_p, aes(x=year, y=p, group=NDC_data, color=NDC_data)) +
   geom_line() +
-  ggtitle("% of MEPS drugs that can be matched using NDC over time") +
+  ggtitle("% of MEPS unique NDC that can be matched using NDC over time") +
   ylab("%") +
   ylim(0, 100)
-
-## 4. NDC-OB to MEPS count
-#4.1 MEPS to original NDC-OB
-MEPS_NDC_OB_antijoin <- MEPS_all_NDC %>%
-  anti_join(NDC_df, by = c("RXNDC9" = "NDC9"))
-
-MEPS_NDC_OB_antijoin %>%
-  distinct(RXNAME) %>%
-  count()
-
-MEPS_NDC_OB_notmatched <- MEPS_NDC_OB_antijoin %>%
-  group_by(year) %>%
-  distinct(RXNAME) %>%
-  count()
-
-MEPS_NDC_OB_innerjoin <- MEPS_all_NDC %>%
-  inner_join(NDC_df, by = c("RXNDC9" = "NDC9"))
-
-MEPS_NDC_OB_innerjoin %>%
-  distinct(RXNAME) %>%
-  count()
-
-MEPS_NDC_OB_matched <- MEPS_NDC_OB_innerjoin %>%
-  group_by(year) %>%
-  distinct(RXNAME) %>%
-  count()
-
-MEPS_NDC_OB_matched <- MEPS_NDC_OB_matched %>%
-  rename(n_match = n) %>%
-  left_join(MEPS_NDC_OB_notmatched, by = "year") %>%
-  mutate(p = n_match / (n + n_match))
-
-

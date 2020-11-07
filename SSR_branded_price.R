@@ -89,3 +89,46 @@ write.xlsx(MEPS_summary_weighted, "~/Dropbox/Advanced Method Project/Data/Aim1/M
 
 test <- MEPS_summary_weighted %>%
   select(index, year, P_b, P_b_SSR, t_LOE)
+
+
+P_g_by_n <-  MEPS_summary_weighted %>%
+  mutate(competitor = ifelse(competitor <= 10, competitor, 11)) %>%
+  filter(!is.na(P_g)) %>%
+  group_by(competitor) %>%
+  summarise(mean = mean(P_g)) %>%
+  mutate(price = "generic")
+
+P_b_by_n <-  MEPS_summary_weighted %>%
+  mutate(competitor = ifelse(competitor <= 10, competitor, 11)) %>%
+  filter(!is.na(P_b)) %>%
+  group_by(competitor) %>%
+  summarise(mean = mean(P_b)) %>%
+  mutate(price = "branded")
+
+P_b_SSR_by_n <-  MEPS_summary_weighted %>%
+  mutate(competitor = ifelse(competitor <= 10, competitor, 11)) %>%
+  filter(!is.na(P_b_SSR)) %>%
+  group_by(competitor) %>%
+  summarise(mean = mean(P_b_SSR)) %>%
+  mutate(price = "branded_SSR")
+
+P_by_n <- P_g_by_n %>%
+  rbind(P_b_by_n) %>%
+  rbind(P_b_SSR_by_n) %>%
+  filter(competitor > 0)
+
+ggplot(data = P_by_n, aes(x=competitor, y=mean, group=price, color=price)) +
+  geom_line() +
+  ggtitle("Average price with respect to the number of generics") +
+  ylab("Price") +
+  ylim(c(0, 500))
+
+P_g_by_t_LOE <-  MEPS_summary_weighted %>%
+  filter(!is.na(P_g)) %>%
+  group_by(t_LOE) %>%
+  summarise(mean = mean(P_g)) 
+
+P_b_by_t_LOE <-  MEPS_summary_weighted %>%
+  filter(!is.na(P_b)) %>%
+  group_by(t_LOE) %>%
+  summarise(mean = mean(P_b))

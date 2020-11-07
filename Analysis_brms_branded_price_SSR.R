@@ -27,7 +27,7 @@ branded_price_id$ll <- seq.int(nrow(branded_price_id))
 
 branded_price <- branded_price %>%
   left_join(branded_price_id) %>%
-  select(Y, index, ll, competitor, P_b_SSR_prior_LOE, t_LOE, year, Trade_Name, oral, inject, ATCA:ATCV)
+  select(Y, index, ll, competitor, P_b_SSR_prior_LOE, t_LOE, year, Trade_Name, oral, inject)
 
 
 branded_price %>% 
@@ -38,7 +38,8 @@ branded_price <- branded_price %>%
   filter(!is.na(P_b_SSR_prior_LOE)) 
 
 branded_price <- branded_price %>% 
-  mutate(P_b_SSR_prior_LOE = log(P_b_SSR_prior_LOE)) 
+  mutate(P_b_SSR_prior_LOE = log(P_b_SSR_prior_LOE)) %>%
+  distinct()
 
 write.xlsx(branded_price, "MEPS_branded_price.xlsx")
 
@@ -81,7 +82,7 @@ branded_price_test_id <- branded_price_test %>%
 
 ###1. Random intercept
 ## Noninformative
-fit_branded_random_intercept_noninformative <- brm(Y ~ competitor + t_LOE + P_b_SSR_prior_LOE + (1|index), 
+fit_branded_random_intercept_noninformative <- brm(Y ~ competitor +  (1|index), 
                                                    data = branded_price_train, family = gaussian(),
                                                    iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                    control = list(adapt_delta = .99, max_treedepth = 20))

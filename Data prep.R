@@ -118,9 +118,6 @@ genericPIV_one_strength <- genericPIV_one_strength %>%
   left_join(genericPIV_included, on = 'Appl_No') %>%
   select(-n)
 
-genericPIV_multiple_strengths <- genericPIV_included %>%
-  anti_join(genericPIV_one_strength, on = 'index')
-
 
 #get branded drug info
 brandedPIV <- df %>% 
@@ -157,10 +154,13 @@ save(NDC_PIV, file = "NDC_PIV.Rdata")
 NDC_generic <- NDC_noPIV %>%
   rbind(NDC_PIV)
 
+NDC_generic %>%
+  distinct(index) %>%
+  count()
+
 #3. Branded
 #for each index, getting branded drug NDC
-branded_id <- NDC_PIV %>%
-  rbind(NDC_noPIV) %>%
+branded_id <- NDC_generic %>%
   distinct(index)
 
 branded_included <- df %>%
@@ -206,6 +206,10 @@ NDC_branded <- NDC_branded_one_strength %>%
   dplyr::select(index, NDC9, NDC11) %>%
   rbind(NDC_branded_historical) %>%
   distinct()
+
+NDC_branded %>%
+  distinct(index) %>%
+  count()
 
 NDC_branded_id <- NDC_branded %>%
   distinct(index)
@@ -941,7 +945,8 @@ load("~/Dropbox/Advanced Method Project/Data/all.RData")
 
 #keep index, oral, inject, ATC*
 drug_info <- df %>%
-  select(index, oral, inject, ATCA:ATCV) %>%
+  #select(index, oral, inject, ATCA:ATCV) %>%
+  select(index, oral, inject) %>%
   distinct()
 
 MEPS_summary_weighted <- MEPS_summary_weighted %>% 
@@ -957,5 +962,7 @@ save(MEPS_summary_weighted, file = "~/Dropbox/Advanced Method Project/Data/Aim1/
 write.xlsx(MEPS_summary_weighted, "~/Dropbox/Advanced Method Project/Data/Aim1/MEPS_Bayesian/MEPS_summary_weighted.xlsx")
 
 save(NDC_branded, file = "NDC_branded.Rdata")
+
+
 
 
