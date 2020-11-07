@@ -217,6 +217,9 @@ NDC_branded_id <- NDC_branded %>%
 NDC_generic_id <- NDC_generic %>%
   distinct(index)
 
+NDC_branded_id_missing <- NDC_generic_id %>% 
+  anti_join(NDC_branded_id)
+
 #only keep branded that shares index with any generic (have generic competition)
 NDC_branded <- NDC_branded %>%
   inner_join(NDC_generic_id)
@@ -504,7 +507,9 @@ MEPS2016 <- MEPS2016 %>%
          price_Medicaid = `AMOUNT PAID, MEDICAID (IMPUTED)`,
          price_private = `AMOUNT PAID, PRIVATE INSURANCE (IMPUTED)`
   ) %>%
-  rename(weight = `EXPENDITURE FILE PERSON WEIGHT, 2016`)
+  rename(weight = `EXPENDITURE FILE PERSON WEIGHT, 2016`,
+         RXSTRENG = `STRENGTH OF MEDICATION (IMPUTED)`, 
+         RXSTRUNT = `UNIT OF MEDICATION (IMPUTED)`)
 
 ####################################################################################
 ##Load MEPS 2017 data
@@ -524,7 +529,9 @@ MEPS2017 <- MEPS2017 %>%
          price_Medicaid = `AMOUNT PAID, MEDICAID (IMPUTED)`,
          price_private = `AMOUNT PAID, PRIVATE INSURANCE (IMPUTED)`
   ) %>%
-  rename(weight = `EXPENDITURE FILE PERSON WEIGHT, 2017`)
+  rename(weight = `EXPENDITURE FILE PERSON WEIGHT, 2017`,
+         RXSTRENG = `STRENGTH OF MEDICATION (IMPUTED)`, 
+         RXSTRUNT = `UNIT OF MEDICATION (IMPUTED)`)
 
 #Filter branded drug only, filtering by NDC code (not drug name)
 #calculate total # of branded drug and generic drug for each index in 2007
@@ -652,6 +659,15 @@ getMEPSannual_weighted <- function(MEPS, index){
   })
 }
 
+getMEPSannual_weighted_by_name <- function(MEPS){
+    data <- MEPS %>%
+      group_by(RXNAME, RXSTRENG, RXSTRUNT) %>%
+      summarise(N = sum(weight),
+                P = sum(price_total*weight)/sum(weight)) 
+
+    return(data)
+}
+
 MEPS2007_summary <- getMEPSannual(MEPS = MEPS2007, index = index) %>% 
   mutate(year = 2007) %>%
   select(index, year, P_b, P_g, N_b, N_g)
@@ -746,7 +762,28 @@ MEPS2017_summary_weighted <- getMEPSannual_weighted(MEPS = MEPS2017, index = ind
   select(index, year, P_b, P_g, N_b, N_g)
 
 
-
+MEPS2007_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2007) %>%
+  mutate(year = 2007) 
+MEPS2008_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2008) %>%
+  mutate(year = 2008) 
+MEPS2009_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2009) %>%
+  mutate(year = 2009) 
+MEPS2010_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2010) %>%
+  mutate(year = 2010) 
+MEPS2011_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2011) %>%
+  mutate(year = 2011) 
+MEPS2012_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2012) %>%
+  mutate(year = 2012) 
+MEPS2013_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2013) %>%
+  mutate(year = 2013) 
+MEPS2014_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2014) %>%
+  mutate(year = 2014) 
+MEPS2015_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2015) %>%
+  mutate(year = 2015) 
+MEPS2016_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2016) %>%
+  mutate(year = 2016) 
+MEPS2017_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2017) %>%
+  mutate(year = 2017) 
 
 MEPS_summary <- MEPS2007_summary %>%
   rbind(MEPS2008_summary) %>%
