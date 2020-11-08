@@ -228,8 +228,8 @@ n_NDC_branded_updated <- NDC_branded %>%
   distinct(index) %>%
   count()
 
-NDC_generic <- NDC_generic %>%
-  inner_join(NDC_branded_id)
+#NDC_generic <- NDC_generic %>%
+#  inner_join(NDC_branded_id)
 
 n_NDC_generic_updated <- NDC_generic %>%
   distinct(index) %>%
@@ -627,22 +627,11 @@ getMEPSannual_weighted <- function(MEPS, index){
       return(data)
     })
     
-    total_weight_branded <- sum(branded$weight) 
     total_weight_generic <- sum(generic$weight) 
-    
-    n_branded <- branded %>%
-      mutate(n_total_weight = 1*weight) %>%
-      summarise(N_b = sum(n_total_weight)) %>%
-      mutate(index = id)
     
     n_generic <- generic %>%
       mutate(n_total_weight = 1*weight) %>%
       summarise(N_g = sum(n_total_weight)) %>%
-      mutate(index = id)
-    
-    p_branded <- branded %>%
-      mutate(price_total_weight = price_total*weight) %>%
-      summarise(P_b = sum(price_total_weight)/total_weight_branded) %>%
       mutate(index = id)
     
     p_generic <- generic %>%
@@ -650,10 +639,29 @@ getMEPSannual_weighted <- function(MEPS, index){
       summarise(P_g = sum(price_total_weight)/total_weight_generic) %>%
       mutate(index = id)
     
-    data <- n_branded %>%
-      left_join(n_generic, by = "index") %>%
-      left_join(p_branded, by = "index") %>%
-      left_join(p_generic, by = "index") 
+    if (nrow(branded) > 0) {
+      total_weight_branded <- sum(branded$weight) 
+      
+      n_branded <- branded %>%
+        mutate(n_total_weight = 1*weight) %>%
+        summarise(N_b = sum(n_total_weight)) %>%
+        mutate(index = id)
+      
+      p_branded <- branded %>%
+        mutate(price_total_weight = price_total*weight) %>%
+        summarise(P_b = sum(price_total_weight)/total_weight_branded) %>%
+        mutate(index = id)
+      
+      data <- n_branded %>%
+        left_join(n_generic, by = "index") %>%
+        left_join(p_branded, by = "index") %>%
+        left_join(p_generic, by = "index") 
+    } else {
+      data <- n_generic %>%
+        left_join(p_generic, by = "index") %>%
+        mutate(P_b = NA,
+               N_b = NA)
+    }
     
     return(data)
   })
@@ -663,7 +671,8 @@ getMEPSannual_weighted_by_name <- function(MEPS){
     data <- MEPS %>%
       group_by(RXNAME, RXSTRENG, RXSTRUNT) %>%
       summarise(N = sum(weight),
-                P = sum(price_total*weight)/sum(weight)) 
+                P = sum(price_total*weight)/sum(weight)) %>%
+      dplyr::arrange(index, P_b, P_g, N_b, N_b)
 
     return(data)
 }
@@ -785,6 +794,7 @@ MEPS2016_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2016) %>%
 MEPS2017_summary_by_name <- getMEPSannual_weighted_by_name(MEPS2017) %>%
   mutate(year = 2017) 
 
+
 MEPS_summary <- MEPS2007_summary %>%
   rbind(MEPS2008_summary) %>%
   rbind(MEPS2009_summary) %>%
@@ -809,7 +819,38 @@ MEPS_summary_weighted <- MEPS2007_summary_weighted %>%
   rbind(MEPS2015_summary_weighted) %>%
   rbind(MEPS2016_summary_weighted) %>%
   rbind(MEPS2017_summary_weighted) 
-  
+
+MEPS_summary_by_name <- MEPS2007_summary_by_name %>%
+  rbind(MEPS2008_summary_by_name) %>%
+  rbind(MEPS2009_summary_by_name) %>%
+  rbind(MEPS2010_summary_by_name) %>%
+  rbind(MEPS2011_summary_by_name) %>%
+  rbind(MEPS2012_summary_by_name) %>%
+  rbind(MEPS2013_summary_by_name) %>%
+  rbind(MEPS2014_summary_by_name) %>%
+  rbind(MEPS2015_summary_by_name) %>%
+  rbind(MEPS2016_summary_by_name) %>%
+  rbind(MEPS2017_summary_by_name) %>%
+  filter(RXNAME != "-9",
+         RXSTRENG != "-9",
+         RXSTRUNT != "-9")
+
+generic_included_name <- generic_included %>%
+  dplyr::select(index, Trade_Name, Strength, year_LOE) %>%
+  distinct()
+
+
+MEPS_summary_by_name <- MEPS_summary_by_name %>%
+  ungroup() %>%
+  mutate(Strength = paste(RXSTRENG, RXSTRUNT, sep="")) %>%
+  rename(Trade_Name = RXNAME) %>%
+  inner_join(generic_included_name, by = c("Trade_Name", "Strength")) %>%
+  inner_join(NDC_generic_id) %>%
+  filter(year_LOE - 1 == year) %>%
+  dplyr::select(index, P, N) %>%
+  rename(P_b_by_name = P, 
+         N_b_by_name = N) 
+
 #combine competitor info
 MEPS_summary <- MEPS_summary %>%
   left_join(MEPS, by = c("index", "year")) %>%
@@ -988,6 +1029,16 @@ drug_info <- df %>%
 
 MEPS_summary_weighted <- MEPS_summary_weighted %>% 
   left_join(drug_info, by = "index")
+
+MEPS_summary_weighted <- MEPS_summary_weighted %>% 
+  left_join(MEPS_summary_by_name,  by = "index")
+
+MEPS_summary_weighted <- MEPS_summary_weighted %>%
+  mutate(P_b_prior_LOE_new = ifelse(is.na(P_b_prior_LOE), P_b_by_name, P_b_prior_LOE),
+         market_size_new = ifelse(is.na(market_size), N_b_by_name, market_size)) %>%
+  dplyr::select(-P_b_prior_LOE, -market_size) %>%
+  rename(P_b_prior_LOE = P_b_prior_LOE_new,
+         market_size = market_size_new)
 
 save(MEPS_summary, file = "MEPS_summary.Rdata")
 write.xlsx(MEPS_summary, "MEPS_summary.xlsx")
