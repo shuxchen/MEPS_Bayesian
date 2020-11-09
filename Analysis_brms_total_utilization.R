@@ -28,7 +28,7 @@ total_utilization_id$ll <- seq.int(nrow(total_utilization_id))
 
 total_utilization <- total_utilization %>%
   left_join(total_utilization_id) %>%
-  select(Y, index, ll, competitor, P_b_prior_LOE, t_LOE, year, Trade_Name, oral, inject, ATCA:ATCV)
+  select(Y, index, ll, competitor, P_b_prior_LOE, t_LOE, year, Trade_Name, oral, inject)#, ATCA:ATCV)
 
 
 total_utilization %>% 
@@ -73,6 +73,9 @@ total_utilization_test <- total_utilization_multiple %>%
 total_utilization_train_id <- total_utilization_train %>%
   distinct(ll)
 
+total_utilization_train <- total_utilization_train %>%
+  bind_rows(total_utilization_one)
+
 total_utilization_test <- total_utilization_test %>%
   inner_join(total_utilization_train_id)
 
@@ -102,3 +105,39 @@ fit_total_utilization_random_intercept_noninformative_prediction <- fit_total_ut
   mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
 
 mean(fit_total_utilization_random_intercept_noninformative_prediction$CI_covered)
+
+###2. Random slope
+## Noninformative
+fit_total_utilization_random_slope_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor |index), 
+                                                             data = total_utilization_train, family = gaussian(),
+                                                             iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                             control = list(adapt_delta = .99, max_treedepth = 20))
+
+print(summary(fit_total_utilization_random_slope_noninformative),digits=5) 
+
+## prediction for noninformative
+fit_total_utilization_random_slope_noninformative_prediction <- predict(fit_total_utilization_random_slope_noninformative, newdata = total_utilization_test)
+
+fit_total_utilization_random_slope_noninformative_prediction <- fit_total_utilization_random_slope_noninformative_prediction %>%
+  cbind(total_utilization_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_total_utilization_random_slope_noninformative_prediction$CI_covered)
+
+###3. Random slope, all
+## Noninformative
+fit_total_utilization_random_slope_all_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor + t_LOE + P_b_prior_LOE|index), 
+                                                             data = total_utilization_train, family = gaussian(),
+                                                             iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                             control = list(adapt_delta = .995, max_treedepth = 20))
+
+print(summary(fit_total_utilization_random_slope_all_noninformative),digits=5) 
+
+## prediction for noninformative
+fit_total_utilization_random_slope_all_noninformative_prediction <- predict(fit_total_utilization_random_slope_all_noninformative, newdata = total_utilization_test)
+
+fit_total_utilization_random_slope_all_noninformative_prediction <- fit_total_utilization_random_slope_all_noninformative_prediction %>%
+  cbind(total_utilization_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_total_utilization_random_slope_all_noninformative_prediction$CI_covered)

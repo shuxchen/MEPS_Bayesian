@@ -1027,6 +1027,10 @@ drug_info <- df %>%
   select(index, oral, inject) %>%
   distinct()
 
+#drug_info <- drug_info %>%
+#  group_by(index) %>%
+#  mutate()
+
 MEPS_summary_weighted <- MEPS_summary_weighted %>% 
   left_join(drug_info, by = "index")
 

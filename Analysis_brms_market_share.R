@@ -29,7 +29,7 @@ generic_share_id$ll <- seq.int(nrow(generic_share_id))
 
 generic_share <- generic_share %>%
   left_join(generic_share_id) %>%
-  select(Y, index, ll, competitor, P_b_prior_LOE, t_LOE, year, Trade_Name, oral, inject, ATCA:ATCV)
+  select(Y, index, ll, competitor, P_b_prior_LOE, t_LOE, year, Trade_Name, oral, inject)#, ATCA:ATCV)
 
 
 generic_share %>% 
@@ -74,6 +74,9 @@ generic_share_test <- generic_share_multiple %>%
 generic_share_train_id <- generic_share_train %>%
   distinct(ll)
 
+generic_share_train <- generic_share_train %>%
+  bind_rows(generic_share_one)
+
 generic_share_test <- generic_share_test %>%
   inner_join(generic_share_train_id)
 
@@ -104,3 +107,38 @@ fit_generic_share_random_intercept_noninformative_prediction <- fit_generic_shar
 
 mean(fit_generic_share_random_intercept_noninformative_prediction$CI_covered)
 
+###2. Random slope
+## Noninformative
+fit_generic_share_random_slope_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor |index), 
+                                                         data = generic_share_train, family = gaussian(),
+                                                         iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                         control = list(adapt_delta = .99, max_treedepth = 20))
+
+print(summary(fit_generic_share_random_slope_noninformative),digits=5) 
+
+## prediction for noninformative
+fit_generic_share_random_slope_noninformative_prediction <- predict(fit_generic_share_random_slope_noninformative, newdata = generic_share_test)
+
+fit_generic_share_random_slope_noninformative_prediction <- fit_generic_share_random_slope_noninformative_prediction %>%
+  cbind(generic_share_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_generic_share_random_slope_noninformative_prediction$CI_covered)
+
+###3. Random slope, all
+## Noninformative
+fit_generic_share_random_slope_all_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor + t_LOE + P_b_prior_LOE|index), 
+                                                     data = generic_share_train, family = gaussian(),
+                                                     iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                     control = list(adapt_delta = .99, max_treedepth = 20))
+
+print(summary(fit_generic_share_random_slope_all_noninformative),digits=5) 
+
+## prediction for noninformative
+fit_generic_share_random_slope_all_noninformative_prediction <- predict(fit_generic_share_random_slope_all_noninformative, newdata = generic_share_test)
+
+fit_generic_share_random_slope_all_noninformative_prediction <- fit_generic_share_random_slope_all_noninformative_prediction %>%
+  cbind(generic_share_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_generic_share_random_slope_all_noninformative_prediction$CI_covered)

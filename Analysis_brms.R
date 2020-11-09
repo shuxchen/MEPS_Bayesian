@@ -26,7 +26,7 @@ generic_price_id$ll <- seq.int(nrow(generic_price_id))
 
 generic_price <- generic_price %>%
   left_join(generic_price_id) %>%
-  select(Y, index, ll, competitor, P_b_prior_LOE, t_LOE, year, Trade_Name, oral, inject, ATCA:ATCV)
+  select(Y, index, ll, competitor, P_b_prior_LOE, t_LOE, year, Trade_Name, oral, inject) #, ATCA:ATCV)
 
 
 generic_price %>% 
@@ -60,16 +60,21 @@ generic_price_multiple <- generic_price %>%
   inner_join(generic_price_n_multiple)
 
 generic_price_one <- generic_price %>%
-  inner_join(generic_price_n_one)
+  inner_join(generic_price_n_one) %>%
+  ungroup()
 
 generic_price_train <- generic_price_multiple %>% 
-  group_by(ll) %>% sample_frac(.5)
+  group_by(ll) %>% 
+  sample_frac(.5) 
 
 generic_price_test <- generic_price_multiple %>%
   anti_join(generic_price_train)
 
 generic_price_train_id <- generic_price_train %>%
   distinct(ll)
+
+generic_price_train <- generic_price_train %>%
+  bind_rows(generic_price_one)
 
 generic_price_test <- generic_price_test %>%
   inner_join(generic_price_train_id)

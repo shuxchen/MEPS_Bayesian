@@ -27,7 +27,7 @@ branded_price_id$ll <- seq.int(nrow(branded_price_id))
 
 branded_price <- branded_price %>%
   left_join(branded_price_id) %>%
-  select(Y, index, ll, competitor, P_b_prior_LOE, t_LOE, year, Trade_Name, oral, inject, ATCA:ATCV)
+  select(Y, index, ll, competitor, P_b_prior_LOE, t_LOE, year, Trade_Name, oral, inject) #, ATCA:ATCV)
 
 
 branded_price %>% 
@@ -71,6 +71,9 @@ branded_price_test <- branded_price_multiple %>%
 
 branded_price_train_id <- branded_price_train %>%
   distinct(ll)
+
+branded_price_train <- branded_price_train %>%
+  bind_rows(branded_price_one)
 
 branded_price_test <- branded_price_test %>%
   inner_join(branded_price_train_id)
@@ -139,3 +142,117 @@ fit_branded_random_intercept_informative_bias_correction_prediction <- fit_brand
   mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
 
 mean(fit_branded_random_intercept_informative_bias_correction_prediction$CI_covered)
+
+
+###2. Random slope
+## Noninformative
+fit_branded_random_slope_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor |index), 
+                                                   data = branded_price_train, family = gaussian(),
+                                                   iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                   control = list(adapt_delta = .99, max_treedepth = 20))
+
+print(summary(fit_branded_random_slope_noninformative),digits=5) 
+
+## prediction for noninformative
+fit_branded_random_slope_noninformative_prediction <- predict(fit_branded_random_slope_noninformative, newdata = branded_price_test)
+
+fit_branded_random_slope_noninformative_prediction <- fit_branded_random_slope_noninformative_prediction %>%
+  cbind(branded_price_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_branded_random_slope_noninformative_prediction$CI_covered)
+
+## Informative
+fit_branded_random_slope_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor |index), 
+                                                data = branded_price_train, family = gaussian(),
+                                                set_prior("normal(0, 10)", class = "b"),
+                                                set_prior("normal(0.01, 0.005)", class = "b", coef = "competitor"),
+                                                iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                control = list(adapt_delta = .99, max_treedepth = 20))
+
+print(summary(fit_branded_random_slope_informative),digits=5) 
+
+## prediction for noninformative
+fit_branded_random_slope_informative_prediction <- predict(fit_branded_random_slope_informative, newdata = branded_price_test)
+
+fit_branded_random_slope_informative_prediction <- fit_branded_random_slope_informative_prediction %>%
+  cbind(branded_price_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_branded_random_slope_informative_prediction$CI_covered)
+
+## Informative, bias corrected
+fit_branded_random_slope_informative_bias_correction <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor |index), 
+                                                                data = branded_price_train, family = gaussian(),
+                                                                set_prior("normal(0, 10)", class = "b"),
+                                                                set_prior("normal(0.02, 0.02)", class = "b", coef = "competitor"),
+                                                                iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                                control = list(adapt_delta = .99, max_treedepth = 20))
+
+print(summary(fit_branded_random_slope_informative_bias_correction),digits=5) 
+
+## prediction for noninformative
+fit_branded_random_slope_informative_bias_correction_prediction <- predict(fit_branded_random_slope_informative_bias_correction, newdata = branded_price_test)
+
+fit_branded_random_slope_informative_bias_correction_prediction <- fit_branded_random_slope_informative_bias_correction_prediction %>%
+  cbind(branded_price_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_branded_random_slope_informative_bias_correction_prediction$CI_covered)
+
+###3. Random all slopes
+## Noninformative
+    fit_branded_random_slope_all_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor + t_LOE + P_b_prior_LOE|index), 
+                                               data = branded_price_train, family = gaussian(),
+                                               iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                               control = list(adapt_delta = .99, max_treedepth = 20))
+
+print(summary(fit_branded_random_slope_all_noninformative),digits=5) 
+
+## prediction for noninformative
+fit_branded_random_slope_all_noninformative_prediction <- predict(fit_branded_random_slope_all_noninformative, newdata = branded_price_test)
+
+fit_branded_random_slope_all_noninformative_prediction <- fit_branded_random_slope_all_noninformative_prediction %>%
+  cbind(branded_price_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_branded_random_slope_all_noninformative_prediction$CI_covered)
+
+## Informative
+fit_branded_random_slope_all_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor + t_LOE + P_b_prior_LOE|index), 
+                                            data = branded_price_train, family = gaussian(),
+                                            set_prior("normal(0, 10)", class = "b"),
+                                            set_prior("normal(0.01, 0.005)", class = "b", coef = "competitor"),
+                                            iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                            control = list(adapt_delta = .99, max_treedepth = 20))
+
+print(summary(fit_branded_random_slope_all_informative),digits=5) 
+
+## prediction for noninformative
+fit_branded_random_slope_all_informative_prediction <- predict(fit_branded_random_slope_all_informative, newdata = branded_price_test)
+
+fit_branded_random_slope_all_informative_prediction <- fit_branded_random_slope_all_informative_prediction %>%
+  cbind(branded_price_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_branded_random_slope_all_informative_prediction$CI_covered)
+
+## Informative, bias corrected
+fit_branded_random_slope_all_informative_bias_correction <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor + t_LOE + P_b_prior_LOE|index), 
+                                                            data = branded_price_train, family = gaussian(),
+                                                            set_prior("normal(0, 10)", class = "b"),
+                                                            set_prior("normal(0.02, 0.02)", class = "b", coef = "competitor"),
+                                                            iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                            control = list(adapt_delta = .99, max_treedepth = 20))
+
+print(summary(fit_branded_random_slope_all_informative_bias_correction),digits=5) 
+
+## prediction for noninformative
+fit_branded_random_slope_all_informative_bias_correction_prediction <- predict(fit_branded_random_slope_all_informative_bias_correction, newdata = branded_price_test)
+
+fit_branded_random_slope_all_informative_bias_correction_prediction <- fit_branded_random_slope_all_informative_bias_correction_prediction %>%
+  cbind(branded_price_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_branded_random_slope_all_informative_bias_correction_prediction$CI_covered)
+
