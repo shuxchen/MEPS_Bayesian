@@ -544,3 +544,74 @@ fit_generic_random_intercept_AG_informative_bias_correction_prediction <- fit_ge
 
 mean(fit_generic_random_intercept_AG_informative_bias_correction_prediction$CI_covered)
 
+
+## 8. Random intercept, with PIV
+MEPS_summary_weighted_PIV <- MEPS_summary_weighted %>%
+  dplyr::select(index, PIV) %>%
+  distinct()
+
+generic_price_train <- generic_price_train %>%
+  left_join(MEPS_summary_weighted_PIV, by = "index")
+
+generic_price_test <- generic_price_test %>%
+  left_join(MEPS_summary_weighted_PIV, by = "index")
+
+# fit models
+fit_generic_random_intercept_PIV_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE  + PIV + (1 |ll), 
+                                                      data = generic_price_train, family = gaussian(),
+                                                      iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                      control = list(adapt_delta = .99, max_treedepth = 20),
+                                                      seed = 190831)
+
+fit_generic_random_intercept_PIV_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + PIV +  (1 |ll), 
+                                                   data = generic_price_train, family = gaussian(),
+                                                   iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                   control = list(adapt_delta = .99, max_treedepth = 20),
+                                                   seed = 190831,
+                                                   set_prior("normal(0, 10)", class = "b"),
+                                                   set_prior("normal(-0.08, 0.02)", class = "b", coef = "competitor"),
+                                                   set_prior("igamma(0.01, 0.01)", class = "sigma"))
+
+fit_generic_random_intercept_PIV_informative_bias_correction <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + PIV + (1 |ll), 
+                                                                   data = generic_price_train, family = gaussian(),
+                                                                   iter = 6000, warmup = 1000, chains = 4, cores = 4,
+                                                                   control = list(adapt_delta = .99, max_treedepth = 20),
+                                                                   seed = 190831,
+                                                                   set_prior("normal(-0.11, 0.07)", class = "b", coef = "competitor"),
+                                                                   set_prior("normal(0, 10)", class = "b"),
+                                                                   set_prior("igamma(0.01, 0.01)", class = "sigma"))
+
+print(summary(fit_generic_random_intercept_PIV_noninformative),digits=5) 
+
+print(summary(fit_generic_random_intercept_PIV_informative),digits=5) 
+
+print(summary(fit_generic_random_intercept_PIV_informative_bias_correction),digits=5) 
+
+
+## Prediction, noninformative
+fit_generic_random_intercept_PIV_noninformative_prediction <- predict(fit_generic_random_intercept_PIV_noninformative, newdata = generic_price_test, re_formula = ~ (1 | index))
+
+fit_generic_random_intercept_PIV_noninformative_prediction <- fit_generic_random_intercept_PIV_noninformative_prediction %>%
+  cbind(generic_price_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_generic_random_intercept_PIV_noninformative_prediction$CI_covered)
+
+## Prediction, informative
+fit_generic_random_intercept_PIV_informative_prediction <- predict(fit_generic_random_intercept_PIV_informative, newdata = generic_price_test, re_formula = ~ (1 | index))
+
+fit_generic_random_intercept_PIV_informative_prediction <- fit_generic_random_intercept_PIV_informative_prediction %>%
+  cbind(generic_price_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_generic_random_intercept_PIV_informative_prediction$CI_covered)
+
+## Prediction, informative, bias correction
+fit_generic_random_intercept_PIV_informative_bias_correction_prediction <- predict(fit_generic_random_intercept_PIV_informative_bias_correction, newdata = generic_price_test, re_formula = ~ (1 | index))
+
+fit_generic_random_intercept_PIV_informative_bias_correction_prediction <- fit_generic_random_intercept_PIV_informative_bias_correction_prediction %>%
+  cbind(generic_price_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_generic_random_intercept_PIV_informative_bias_correction_prediction$CI_covered)
+

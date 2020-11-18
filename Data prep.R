@@ -53,7 +53,7 @@ genericnoPIV_one_strength <- genericnoPIV_one_strength %>%
   select(-n)
 
 genericnoPIV_multiple_strengths <- genericnoPIV_included %>%
-  anti_join(genericnoPIV_one_strength, on = 'index')
+  anti_join(genericnoPIV_one_strength, by = 'index')
 
 #get branded drug info
 brandednoPIV <- df %>% 
@@ -118,6 +118,8 @@ genericPIV_one_strength <- genericPIV_one_strength %>%
   left_join(genericPIV_included, on = 'Appl_No') %>%
   select(-n)
 
+genericPIV_multiple_strengths <- genericPIV_included %>%
+  anti_join(genericnoPIV_one_strength, by = 'index')	  
 
 #get branded drug info
 brandedPIV <- df %>% 
@@ -132,6 +134,8 @@ NDC_PIV_one_strength <- merge(NDC, genericPIV_one_strength, by=c("Appl_No"))
 NDC_PIV_one_strength %>%
   distinct(index) %>%
   count()
+
+
 
 NDC_PIV_multiple_strengths <- merge(NDC, genericPIV_multiple_strengths, by=c("Appl_No", "Strength"))
 
@@ -182,7 +186,7 @@ branded_one_strength <- branded_one_strength %>%
   select(-n)
 
 branded_multiple_strengths <- branded_included %>%
-  anti_join(branded_one_strength, on = 'index')
+  anti_join(branded_one_strength, by = 'index')
 
 #Merge data and NDC data
 
@@ -671,8 +675,8 @@ getMEPSannual_weighted_by_name <- function(MEPS){
     data <- MEPS %>%
       group_by(RXNAME, RXSTRENG, RXSTRUNT) %>%
       summarise(N = sum(weight),
-                P = sum(price_total*weight)/sum(weight)) %>%
-      dplyr::arrange(index, P_b, P_g, N_b, N_b)
+                P = sum(price_total*weight)/sum(weight)) 
+      return(data)
 
     return(data)
 }
@@ -1027,12 +1031,26 @@ drug_info <- df %>%
   select(index, oral, inject) %>%
   distinct()
 
+genericnoPIV_status <- genericnoPIV %>%
+  distinct(index) %>%
+  mutate(PIV = 0)
+
+genericPIV_status <- genericPIV %>%
+  distinct(index) %>%
+  mutate(PIV = 1)
+
+genericPIV_status <- genericPIV_status %>%
+  rbind(genericnoPIV_status)
+
 #drug_info <- drug_info %>%
 #  group_by(index) %>%
 #  mutate()
 
 MEPS_summary_weighted <- MEPS_summary_weighted %>% 
   left_join(drug_info, by = "index")
+
+MEPS_summary_weighted <- MEPS_summary_weighted %>% 
+  left_join(genericPIV_status, by = "index")
 
 MEPS_summary_weighted <- MEPS_summary_weighted %>% 
   left_join(MEPS_summary_by_name,  by = "index")
