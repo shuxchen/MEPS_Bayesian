@@ -89,8 +89,16 @@ load("generic_price_train_brms.Rdata")
 load("generic_price_test_brms.Rdata")
 
 ### 1. random intercept
+prior_noninformative <- c(set_prior("normal(0,10)", class = "b"))
+prior_informative <- c(set_prior("normal(-0.08, 0.02)", class = "b", coef = "competitor"),
+                       set_prior("normal(0,10)", class = "b"))
+prior_bias_corrected <- c(set_prior("normal(-0.11, 0.07)", class = "b", coef = "competitor"),
+                       set_prior("normal(0,10)", class = "b"))
+
+
 fit_generic_random_intercept_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1|index), 
                                                 data = generic_price_train, family = gaussian(),
+                                                prior = prior_noninformative,
                                                 iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                 control = list(adapt_delta = .99, max_treedepth = 20))
 
@@ -106,15 +114,13 @@ fit_generic_random_intercept_noninformative <- brm(Y ~ competitor + t_LOE + P_b_
 
 fit_generic_random_intercept_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1|index), 
                                                 data = generic_price_train, family = gaussian(),
-                                                set_prior("normal(0, 10)", class = "b"),
-                                                set_prior("normal(-0.08, 0.02)", class = "b", coef = "competitor"),
+                                                prior = prior_informative,
                                                 iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                 control = list(adapt_delta = .99, max_treedepth = 20))
 
 fit_generic_random_intercept_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1|index), 
                                                 data = generic_price_train, family = gaussian(),
-                                                set_prior("normal(0, 10)", class = "b"),
-                                                set_prior("normal(-0.11, 0.07)", class = "b", coef = "competitor"),
+                                                prior = prior_bias_corrected,
                                                 iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                 control = list(adapt_delta = .99, max_treedepth = 20))
 

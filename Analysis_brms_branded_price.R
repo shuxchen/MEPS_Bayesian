@@ -87,14 +87,21 @@ save(branded_price_test, file = "branded_price_test_brms.RData")
 load("branded_price_train_brms.Rdata")
 load("branded_price_test_brms.Rdata")
 
+test <- lm(Y ~ competitor + t_LOE + P_b_prior_LOE, data = branded_price_train)
+summary(test)
+
 ###1. Random intercept
 ## Noninformative
 fit_branded_random_intercept_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1|index), 
                                                    data = branded_price_train, family = gaussian(),
+                                                   set_prior("normal(0, 10)", class = "b"),
+                                                   set_prior("normal(0, 10)", class = "b", coef = "competitor"),
                                                    iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                    control = list(adapt_delta = .99, max_treedepth = 20))
 
 print(summary(fit_branded_random_intercept_noninformative),digits=5) 
+
+plot(fit_branded_random_intercept_noninformative)
 
 ## prediction for noninformative
 fit_branded_random_intercept_noninformative_prediction <- predict(fit_branded_random_intercept_noninformative, newdata = branded_price_test)
@@ -106,14 +113,18 @@ fit_branded_random_intercept_noninformative_prediction <- fit_branded_random_int
 mean(fit_branded_random_intercept_noninformative_prediction$CI_covered)
 
 ## Informative
+prior_informative <- c(set_prior("normal(0.01, 0.005)", class = "b", coef = "competitor"),
+            set_prior("normal(0,10)", class = "b"))
+
 fit_branded_random_intercept_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1|index), 
                                                    data = branded_price_train, family = gaussian(),
-                                                set_prior("normal(0, 10)", class = "b"),
-                                                set_prior("normal(0.01, 0.005)", class = "b", coef = "competitor"),
+                                                prior = prior_informative,
                                                    iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                    control = list(adapt_delta = .99, max_treedepth = 20))
 
 print(summary(fit_branded_random_intercept_informative),digits=5) 
+
+prior_summary(fit_branded_random_intercept_informative)
 
 ## prediction for noninformative
 fit_branded_random_intercept_informative_prediction <- predict(fit_branded_random_intercept_informative, newdata = branded_price_test)
@@ -125,16 +136,18 @@ fit_branded_random_intercept_informative_prediction <- fit_branded_random_interc
 mean(fit_branded_random_intercept_informative_prediction$CI_covered)
 
 ## Informative, bias corrected
+prior_bias_corrected <- c(set_prior("normal(0.02, 0.02)", class = "b", coef = "competitor"),
+                       set_prior("normal(0,10)", class = "b"))
+
 fit_branded_random_intercept_informative_bias_correction <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1|index), 
                                                 data = branded_price_train, family = gaussian(),
-                                                set_prior("normal(0, 10)", class = "b"),
-                                                set_prior("normal(0.02, 0.02)", class = "b", coef = "competitor"),
+                                                prior = prior_bias_corrected,
                                                 iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                 control = list(adapt_delta = .99, max_treedepth = 20))
 
 print(summary(fit_branded_random_intercept_informative_bias_correction),digits=5) 
 
-## prediction for noninformative
+## prediction for bias-corrected
 fit_branded_random_intercept_informative_bias_correction_prediction <- predict(fit_branded_random_intercept_informative_bias_correction, newdata = branded_price_test)
 
 fit_branded_random_intercept_informative_bias_correction_prediction <- fit_branded_random_intercept_informative_bias_correction_prediction %>%
