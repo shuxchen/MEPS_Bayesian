@@ -178,8 +178,7 @@ mean(fit_branded_random_slope_noninformative_prediction$CI_covered)
 ## Informative
 fit_branded_random_slope_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor |index), 
                                                 data = branded_price_train, family = gaussian(),
-                                                set_prior("normal(0, 10)", class = "b"),
-                                                set_prior("normal(0.01, 0.005)", class = "b", coef = "competitor"),
+                                                prior = prior_informative,
                                                 iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                 control = list(adapt_delta = .99, max_treedepth = 20))
 
@@ -197,8 +196,7 @@ mean(fit_branded_random_slope_informative_prediction$CI_covered)
 ## Informative, bias corrected
 fit_branded_random_slope_informative_bias_correction <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor |index), 
                                                                 data = branded_price_train, family = gaussian(),
-                                                                set_prior("normal(0, 10)", class = "b"),
-                                                                set_prior("normal(0.02, 0.02)", class = "b", coef = "competitor"),
+                                                                prior = prior_bias_corrected,
                                                                 iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                                 control = list(adapt_delta = .99, max_treedepth = 20))
 
@@ -215,7 +213,7 @@ mean(fit_branded_random_slope_informative_bias_correction_prediction$CI_covered)
 
 ###3. Random all slopes
 ## Noninformative
-    fit_branded_random_slope_all_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor + t_LOE + P_b_prior_LOE|index), 
+fit_branded_random_slope_all_noninformative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor + t_LOE + P_b_prior_LOE|index), 
                                                data = branded_price_train, family = gaussian(),
                                                iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                control = list(adapt_delta = .99, max_treedepth = 20))
@@ -234,8 +232,7 @@ mean(fit_branded_random_slope_all_noninformative_prediction$CI_covered)
 ## Informative
 fit_branded_random_slope_all_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor + t_LOE + P_b_prior_LOE|index), 
                                             data = branded_price_train, family = gaussian(),
-                                            set_prior("normal(0, 10)", class = "b"),
-                                            set_prior("normal(0.01, 0.005)", class = "b", coef = "competitor"),
+                                            prior = prior_informative,
                                             iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                             control = list(adapt_delta = .99, max_treedepth = 20))
 
@@ -253,8 +250,7 @@ mean(fit_branded_random_slope_all_informative_prediction$CI_covered)
 ## Informative, bias corrected
 fit_branded_random_slope_all_informative_bias_correction <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor + t_LOE + P_b_prior_LOE|index), 
                                                             data = branded_price_train, family = gaussian(),
-                                                            set_prior("normal(0, 10)", class = "b"),
-                                                            set_prior("normal(0.02, 0.02)", class = "b", coef = "competitor"),
+                                                            prior = prior_bias_corrected,
                                                             iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                             control = list(adapt_delta = .99, max_treedepth = 20))
 

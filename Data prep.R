@@ -103,6 +103,7 @@ genericPIV_included <- genericPIV %>%
   inner_join(genericPIV_id) %>%
   left_join(index_time_PIV) %>%
   mutate(year_LOE = year(index_time)) %>%
+  filter(entry2 == 1) %>%
   select(index, Appl_No, Product_No, Strength, Appl_Type, approveyear, Approval_Date, year_LOE, Trade_Name) 
 
 # get index for molecules without multiple strengths 

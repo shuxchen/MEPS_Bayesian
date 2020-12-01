@@ -166,18 +166,14 @@ fit_generic_random_slope_informative <- brm(Y ~ competitor + t_LOE + P_b_prior_L
                                                iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                control = list(adapt_delta = .995, max_treedepth = 20),
                                                seed = 190831,
-                                            set_prior("normal(0, 10)", class = "b"),
-                                            set_prior("normal(-0.08, 0.02)", class = "b", coef = "competitor"),
-                                            set_prior("igamma(0.01, 0.01)", class = "sigma"))
+                                               prior = prior_informative)
 
 fit_generic_random_slope_informative_bias_correction <- brm(Y ~ competitor + t_LOE + P_b_prior_LOE + (1 + competitor|ll), 
                                             data = generic_price_train, family = gaussian(),
                                             iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                             control = list(adapt_delta = .995, max_treedepth = 20),
                                             seed = 190831,
-                                            set_prior("normal(-0.11, 0.07)", class = "b", coef = "competitor"),
-                                            set_prior("normal(0, 10)", class = "b"),
-                                            set_prior("igamma(0.01, 0.01)", class = "sigma"))
+                                            prior = prior_bias_corrected)
 
 
 get_prior(Y ~ competitor + t_LOE + log(P_b_prior_LOE) + (1 + competitor|ll), 
@@ -218,6 +214,8 @@ mean(fit_generic_random_slope_informative_bias_correction_prediction$CI_covered)
 
 
 ##3. random slope, all
+
+
 fit_generic_random_slope_all_noninformative <- brm(Y ~ competitor + t_LOE + log(P_b_prior_LOE) + (1 + competitor + t_LOE + log(P_b_prior_LOE)|index), 
                                                data = generic_price_train, family = gaussian(),
                                                iter = 6000, warmup = 1000, chains = 4, cores = 4,
@@ -229,18 +227,14 @@ fit_generic_random_slope_all_informative <- brm(Y ~ competitor + t_LOE + log(P_b
                                             iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                             control = list(adapt_delta = .99, max_treedepth = 20),
                                             seed = 190831,
-                                            set_prior("normal(0, 10)", class = "b"),
-                                            set_prior("normal(-0.08, 0.02)", class = "b", coef = "competitor"),
-                                            set_prior("igamma(0.01, 0.01)", class = "sigma"))
+                                            prior = prior_informative)
 
-fit_generic_random_slope_all_informative <- brm(Y ~ competitor + t_LOE + log(P_b_prior_LOE) + (1 + competitor + t_LOE + log(P_b_prior_LOE)|index), 
+fit_generic_random_slope_all_informative_bias_corrected <- brm(Y ~ competitor + t_LOE + log(P_b_prior_LOE) + (1 + competitor + t_LOE + log(P_b_prior_LOE)|index), 
                                                 data = generic_price_train, family = gaussian(),
                                                 iter = 6000, warmup = 1000, chains = 4, cores = 4,
                                                 control = list(adapt_delta = .99, max_treedepth = 20),
                                                 seed = 190831,
-                                                set_prior("normal(-0.11, 0.07)", class = "b", coef = "competitor"),
-                                                set_prior("normal(0, 10)", class = "b"),
-                                                set_prior("igamma(0.01, 0.01)", class = "sigma"))
+                                                prior = prior_bias_corrected)
 
 get_prior(Y ~ competitor + t_LOE + log(P_b_prior_LOE) + (1 + competitor|ll), 
           data = generic_price_train, family = gaussian())
@@ -248,6 +242,9 @@ get_prior(Y ~ competitor + t_LOE + log(P_b_prior_LOE) + (1 + competitor|ll),
 print(summary(fit_generic_random_slope_all_noninformative),digits=5) 
 
 print(summary(fit_generic_random_slope_all_informative),digits=5) 
+
+print(summary(fit_generic_random_slope_all_informative_bias_corrected),digits=5) 
+
 
 ## Prediction, noninformative
 fit_generic_random_slope_all_noninformative_prediction <- predict(fit_generic_random_slope_all_noninformative, newdata = generic_price_test)
@@ -266,6 +263,16 @@ fit_generic_random_slope_all_informative_prediction <- fit_generic_random_slope_
   mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
 
 mean(fit_generic_random_slope_all_informative_prediction$CI_covered)
+
+## Prediction, informative, bias-corrected
+fit_generic_random_slope_all_informative_bias_corrected_prediction <- predict(fit_generic_random_slope_all_informative_bias_corrected, newdata = generic_price_test)
+
+fit_generic_random_slope_all_informative_bias_corrected_prediction <- fit_generic_random_slope_all_informative_bias_corrected_prediction %>%
+  cbind(generic_price_test[1]) %>%
+  mutate(CI_covered = ifelse(`Q2.5` <= Y & `Q97.5` >= Y, 1, 0))
+
+mean(fit_generic_random_slope_all_informative_bias_corrected_prediction$CI_covered)
+
 
 ##4. random intercept, molecule-route level
 fit_generic_random_intercept_noninformative <- brm(Y ~ competitor + t_LOE + log(P_b_prior_LOE) + (1 |Trade_Name), 
